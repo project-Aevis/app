@@ -10,6 +10,7 @@
 #include <QQmlEngine>
 #include <QString>
 #include <QStringList>
+#include <QVariantList>
 
 #include <functional>
 
@@ -23,6 +24,7 @@ class LibraryActions : public QObject
 
     Q_PROPERTY(QString error READ error NOTIFY errorChanged)
     Q_PROPERTY(QStringList pendingRatings READ pendingRatings NOTIFY pendingRatingsChanged)
+    Q_PROPERTY(QVariantList pinnedPlaylists READ pinnedPlaylists NOTIFY pinnedPlaylistsChanged)
 
 public:
     explicit LibraryActions(QObject *parent);
@@ -59,9 +61,16 @@ public:
                           const std::function<void(bool)> &handler);
     void applyOverrides(model::Item &item) const;
 
+    QVariantList pinnedPlaylists() const;
+    Q_INVOKABLE bool isPlaylistPinned(const QString &playlistId) const;
+    Q_INVOKABLE void pinPlaylist(const QString &playlistId, const QString &title, const QString &artId = {});
+    Q_INVOKABLE void unpinPlaylist(const QString &playlistId);
+    Q_INVOKABLE void togglePinPlaylist(const QString &playlistId, const QString &title, const QString &artId = {});
+
 Q_SIGNALS:
     void errorChanged();
     void pendingRatingsChanged();
+    void pinnedPlaylistsChanged();
     void trackRatingChanged(const QString &videoId, int rating);
     void trackDisliked(const QString &videoId);
     void trackEntryRead(const model::Item &entry);
@@ -89,6 +98,17 @@ private:
               const Revert &revert, const Revert &success = {});
     void setError(const QString &error);
     void forget();
+    void loadPinnedPlaylists();
+    void savePinnedPlaylists();
+    QString pinnedPlaylistsSettingsKey() const;
+
+    struct PinnedPlaylist
+    {
+        QString playlistId;
+        QString title;
+        QString artId;
+    };
+    QList<PinnedPlaylist> m_pinnedPlaylists;
 
     innertube::Endpoints m_endpoints;
     QString m_error;

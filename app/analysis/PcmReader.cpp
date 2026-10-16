@@ -52,6 +52,8 @@ std::optional<PcmReader::Result> PcmReader::read(const player::Stream &stream,
         && setOption(handle, "ao-pcm-waveheader", "no")
         && setOption(handle, "audio-samplerate", QByteArray::number(kSampleRate))
         && setOption(handle, "audio-channels", "mono") && setOption(handle, "audio-format", "float")
+        && setOption(handle, "demuxer-max-bytes", "4MiB")
+        && setOption(handle, "demuxer-max-back-bytes", "0")
         && setOption(handle, "cache", "yes");
     if (!configured || mpv_initialize(handle) < 0) {
         mpv_terminate_destroy(handle);

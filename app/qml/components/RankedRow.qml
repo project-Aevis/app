@@ -21,7 +21,7 @@ RippleSurface {
         width: Theme.sized(48)
         height: Theme.sized(48)
         artId: root.entry.artId
-        rounding: root.entry.circular ? Theme.shape.avatar : Theme.shape.artwork
+        rounding: root.entry.circular ? Theme.shape.avatar : Theme.sized(8)
     }
 
     Column {
@@ -37,6 +37,7 @@ RippleSurface {
             text: root.entry.rank
             title: true
             font.pixelSize: Theme.font.small
+            font.weight: Font.DemiBold
             color: Theme.colOnSurface
         }
 
@@ -47,8 +48,8 @@ RippleSurface {
                 : root.entry.movement === "down" ? "arrow_drop_down" : "remove"
             iconSize: Theme.sized(20)
             fill: 1
-            color: root.entry.movement === "up" ? Theme.colPrimary
-                : root.entry.movement === "down" ? Theme.colError : Theme.colInactive
+            color: root.entry.movement === "up" ? "#34C759"
+                : root.entry.movement === "down" ? "#FF3B30" : Theme.colInactive
         }
     }
 

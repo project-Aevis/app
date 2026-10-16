@@ -97,7 +97,8 @@ QtObject {
     }
 
     readonly property QtObject font: QtObject {
-        readonly property string main: root.tokens["typography.family"]
+        readonly property string main: "SF Pro Text, SF Pro, -apple-system, BlinkMacSystemFont, Roboto, sans-serif"
+        readonly property string displayFont: "SF Pro Display, SF Pro, -apple-system, BlinkMacSystemFont, Roboto, sans-serif"
         readonly property string icon: root.tokens["icons.family"]
         readonly property string mono: Qt.platform.os === "windows" ? "Consolas"
             : Qt.platform.os === "osx" ? "Menlo" : "monospace"

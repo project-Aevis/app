@@ -13,6 +13,10 @@
 #include <ctime>
 #include <functional>
 
+#if defined(Q_OS_LINUX) && defined(__GLIBC__)
+#include <malloc.h>
+#endif
+
 namespace {
 
 class AnalysisJob final : public QRunnable
@@ -69,6 +73,9 @@ public:
         outcome.elapsedMs = elapsed.elapsed();
         outcome.cpuMs = qint64(1000.0 * double(std::clock() - cpuStart) / CLOCKS_PER_SEC);
         m_completion(outcome);
+#if defined(Q_OS_LINUX) && defined(__GLIBC__)
+        malloc_trim(0);
+#endif
     }
 
 private:

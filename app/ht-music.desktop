@@ -1,10 +1,10 @@
 [Desktop Entry]
 Type=Application
-Name=HyperTube Music
+Name=Music
 GenericName=Music Player
-Comment=Native YouTube Music client
-Exec=ht-music
-Icon=ht-music
+Comment=Native Music client
+Exec=ht-music %U
+Icon=cutefish-music
 Terminal=false
-Categories=AudioVideo;Audio;Player;
+Categories=AudioVideo;Audio;Player;Qt;
 StartupWMClass=ht-music

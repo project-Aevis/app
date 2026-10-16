@@ -10,19 +10,28 @@ RippleSurface {
     property bool ghost: false
     property bool busy: false
     property int iconSize: Theme.font.normal
-    property real horizontalPadding: Theme.spaced(18)
+    property real horizontalPadding: Theme.spaced(16)
     property real leadingPadding: root.horizontalPadding
     property real busyReveal: root.busy ? 1 : 0
 
-    readonly property color colLabel: root.toggled ? Theme.colOnSecondaryContainer
-        : Theme.colOnSurfaceVariant
+    readonly property color colLabel: root.toggled ? "#FFFFFF"
+        : Theme.colOnSurface
 
     implicitWidth: row.implicitWidth + root.leadingPadding + root.horizontalPadding
-    implicitHeight: Theme.sized(38)
-    rounding: Theme.shape.button
-    colBackground: root.toggled ? Theme.colSecondaryContainer
-        : root.ghost ? "transparent" : Theme.colLayer3
-    colState: root.toggled ? Theme.colOnSecondaryContainer : Theme.colOnSurface
+    implicitHeight: Theme.sized(32)
+    rounding: height / 2
+    colBackground: root.toggled ? "#FA2D48"
+        : root.ghost ? "transparent" : (Theme.darkMode ? Qt.rgba(1, 1, 1, 0.08) : Qt.rgba(0, 0, 0, 0.05))
+    colState: root.toggled ? "#FFFFFF" : Theme.colOnSurface
+
+    Rectangle {
+        anchors.fill: parent
+        radius: root.rounding
+        color: "transparent"
+        border.width: root.toggled ? 0 : 1
+        border.color: Theme.darkMode ? Qt.rgba(1, 1, 1, 0.12) : Qt.rgba(0, 0, 0, 0.08)
+        visible: !root.ghost
+    }
 
     Behavior on busyReveal {
         NumberAnimation {
@@ -37,16 +46,15 @@ RippleSurface {
 
         x: root.leadingPadding
         anchors.verticalCenter: parent.verticalCenter
-        spacing: root.icon ? Theme.spaced(8) : 0
+        spacing: root.icon ? Theme.spaced(6) : 0
 
-        Sym {
+        AppleIcon {
             id: glyph
 
             anchors.verticalCenter: parent.verticalCenter
             visible: root.icon.length > 0
-            text: root.icon
-            iconSize: root.iconSize
-            fill: root.toggled ? 1 : 0
+            name: root.icon
+            size: root.iconSize
             color: root.colLabel
             opacity: 1 - root.busyReveal
             scale: 1 - 0.4 * root.busyReveal
@@ -55,8 +63,8 @@ RippleSurface {
         StyledText {
             anchors.verticalCenter: parent.verticalCenter
             text: root.text
-            title: root.toggled
             font.pixelSize: Theme.font.smallie
+            font.weight: root.toggled ? Font.DemiBold : Font.Normal
             color: root.colLabel
         }
     }
@@ -71,3 +79,4 @@ RippleSurface {
         colArc: root.colLabel
     }
 }
+

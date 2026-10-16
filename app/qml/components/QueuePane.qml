@@ -11,8 +11,8 @@ Item {
     readonly property bool station: PlaybackController.live
     readonly property bool framed: root.navigable || root.station
     readonly property real originPresence: Math.max(0, Math.min(1, root.originReveal))
-    readonly property color currentFill: Theme.darkMode ? ColorUtils.withAlpha(Theme.colPrimary, 0.46)
-        : ColorUtils.withAlpha(Theme.colSecondaryContainer, 0.85)
+    readonly property color currentFill: Theme.darkMode ? ColorUtils.withAlpha("#FA2D48", 0.20)
+        : ColorUtils.withAlpha("#FA2D48", 0.10)
 
     signal sourceRequested(var source)
 
@@ -149,13 +149,13 @@ Item {
                 width: root.navigable ? chevron.iconSize : stationBadge.implicitWidth
                 height: stationBadge.implicitHeight
 
-                Sym {
+                AppleIcon {
                     id: chevron
 
                     anchors.centerIn: parent
                     visible: root.navigable
-                    text: "chevron_right"
-                    iconSize: Theme.font.larger
+                    name: "chevron_right"
+                    size: Theme.font.larger
                     color: originPlate.hovered ? Theme.colOnSurface : Theme.colOnSurfaceVariant
                 }
 
@@ -245,13 +245,12 @@ Item {
                         }
                     }
 
-                    Sym {
+                    AppleIcon {
                         anchors.centerIn: parent
                         opacity: row.playingNow ? 0 : 1
-                        text: "play_arrow"
-                        iconSize: Theme.font.larger
-                        fill: 1
-                        color: row.current ? Theme.colPrimary : Theme.colOnSurface
+                        name: "play_arrow"
+                        size: Theme.font.larger
+                        color: row.current ? "#FA2D48" : Theme.colOnSurface
                     }
 
                     PlayingIndicator {
@@ -259,6 +258,7 @@ Item {
                         visible: row.playingNow
                         playing: visible && enabled
                         barHeight: Theme.sized(16)
+                        colBars: "#FA2D48"
                     }
                 }
             }
@@ -277,7 +277,8 @@ Item {
                     text: modelData.title
                     title: row.current
                     font.pixelSize: Theme.font.smallie
-                    color: row.current ? Theme.colOnPrimaryContainer : Theme.colOnSurface
+                    font.weight: row.current ? Font.DemiBold : Font.Normal
+                    color: row.current ? "#FA2D48" : Theme.colOnSurface
                     elide: Text.ElideRight
                 }
 

@@ -63,11 +63,11 @@ Item {
         anchors.bottomMargin: Theme.spaced(8)
         visible: root.populated
         model: Lyrics.lines
-        spacing: Theme.spaced(10)
+        spacing: Theme.spaced(24)
         clip: true
         boundsBehavior: Flickable.StopAtBounds
-        topMargin: Theme.spaced(12)
-        bottomMargin: Theme.spaced(24)
+        topMargin: lines.height * 0.35
+        bottomMargin: lines.height * 0.40
 
         ScrollBar.vertical: PageScrollBar {}
 
@@ -78,40 +78,41 @@ Item {
             required property int index
 
             readonly property bool spoken: Lyrics.synced && line.index === Lyrics.activeLine
-            readonly property bool passed: Lyrics.synced && line.index < Lyrics.activeLine
+            readonly property int diff: line.index - Lyrics.activeLine
+            readonly property real targetOpacity: !Lyrics.synced ? 0.95
+                : line.spoken ? 1.0
+                : diff > 0 ? (diff === 1 ? 0.55 : diff === 2 ? 0.38 : diff === 3 ? 0.24 : diff === 4 ? 0.14 : 0.06)
+                : (diff === -1 ? 0.40 : 0.25)
 
             width: lines.width
-            height: label.implicitHeight * root.scaleReserve
+            height: label.implicitHeight
 
             StyledText {
                 id: label
 
-                width: Math.max(1, (line.width - root.rightInset) / root.scaleReserve)
+                width: Math.max(1, line.width - root.rightInset)
                 renderType: Text.CurveRendering
                 text: line.modelData
-                title: line.spoken
+                title: true
                 wrapMode: Text.Wrap
-                transformOrigin: Item.Left
-                scale: line.spoken ? root.emphasisScale : 1
-                font.pixelSize: Lyrics.synced ? Theme.font.larger : Theme.font.normal
-                color: !Lyrics.synced ? Theme.colOnSurface
-                    : line.spoken ? Theme.colPrimary
-                    : line.passed ? Theme.colOnSurfaceVariant
-                    : Theme.colInactive
+                font.pixelSize: Lyrics.synced ? (line.spoken ? Theme.sized(34) : Theme.sized(30)) : Theme.sized(26)
+                font.weight: Font.Bold
+                color: "#FFFFFF"
+                opacity: line.targetOpacity
 
-                Behavior on scale {
+                Behavior on opacity {
+                    NumberAnimation {
+                        duration: Theme.duration.fast
+                        easing.type: Easing.BezierSpline
+                        easing.bezierCurve: Theme.curve.expressiveEffects
+                    }
+                }
+
+                Behavior on font.pixelSize {
                     NumberAnimation {
                         duration: Theme.duration.spatialFast
                         easing.type: Easing.BezierSpline
                         easing.bezierCurve: Theme.curve.expressiveFastSpatial
-                    }
-                }
-
-                Behavior on color {
-                    ColorAnimation {
-                        duration: Theme.duration.fast
-                        easing.type: Easing.BezierSpline
-                        easing.bezierCurve: Theme.curve.expressiveEffects
                     }
                 }
             }

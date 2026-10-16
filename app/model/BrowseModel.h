@@ -31,6 +31,7 @@ class BrowseModel : public QAbstractListModel
     Q_PROPERTY(QString privacy READ privacy NOTIFY stateChanged)
     Q_PROPERTY(QString artId READ artId NOTIFY stateChanged)
     Q_PROPERTY(QString kind READ kind CONSTANT)
+    Q_PROPERTY(model::Item source READ source CONSTANT)
     Q_PROPERTY(model::Item entry READ entry NOTIFY stateChanged)
     Q_PROPERTY(bool refreshing READ refreshing NOTIFY stateChanged)
     Q_PROPERTY(bool loading READ loading NOTIFY stateChanged)

@@ -61,12 +61,12 @@ RippleSurface {
         Artwork {
             anchors.fill: parent
             artId: root.entry.artId
-            rounding: Theme.shape.artwork
+            rounding: Theme.sized(10)
         }
 
         Rectangle {
             anchors.fill: parent
-            radius: Theme.shape.artwork
+            radius: Theme.sized(10)
             color: ColorUtils.withAlpha(Theme.colLayer1, 0.62)
             opacity: root.cueVisible ? 1 : 0
 
@@ -78,13 +78,12 @@ RippleSurface {
                 }
             }
 
-            Sym {
+            AppleIcon {
                 anchors.centerIn: parent
                 opacity: root.playingNow ? 0 : 1
                 scale: root.hovered ? 1 : 0.8
-                text: "play_arrow"
-                iconSize: root.compact ? Theme.sized(28) : Theme.sized(34)
-                fill: 1
+                name: "play_arrow"
+                size: root.compact ? Theme.sized(28) : Theme.sized(34)
                 color: Theme.colOnSurface
 
                 Behavior on scale {
@@ -133,7 +132,8 @@ RippleSurface {
             text: root.entry.title
             title: true
             font.pixelSize: Theme.font.small
-            color: root.active ? Theme.colPrimary : root.entry.played ? Theme.colOnSurfaceVariant
+            font.weight: root.active ? Font.DemiBold : Font.Normal
+            color: root.active ? "#FA2D48" : root.entry.played ? Theme.colOnSurfaceVariant
                 : Theme.colOnSurface
             wrapMode: Text.WordWrap
             maximumLineCount: 2
@@ -178,12 +178,11 @@ RippleSurface {
                 spacing: Theme.spaced(5)
                 visible: root.entry.played
 
-                Sym {
+                AppleIcon {
                     anchors.verticalCenter: parent.verticalCenter
-                    text: "check_circle"
-                    iconSize: Theme.sized(15)
-                    fill: 1
-                    color: Theme.colPrimary
+                    name: "check"
+                    size: Theme.sized(15)
+                    color: "#FA2D48"
                 }
 
                 StyledText {
@@ -191,7 +190,7 @@ RippleSurface {
                     text: qsTr("Played")
                     title: true
                     font.pixelSize: Theme.font.smaller
-                    color: Theme.colPrimary
+                    color: "#FA2D48"
                 }
             }
 
@@ -221,7 +220,7 @@ RippleSurface {
                     width: parent.width * Math.max(0, Math.min(1, root.progress))
                     height: parent.height
                     radius: Theme.shape.track
-                    color: Theme.colPrimary
+                    color: "#FA2D48"
                 }
             }
         }
@@ -235,12 +234,12 @@ RippleSurface {
         anchors.verticalCenter: parent.verticalCenter
         spacing: Theme.spaced(2)
 
-        Sym {
+        AppleIcon {
             anchors.verticalCenter: parent.verticalCenter
             opacity: root.downloaded ? 1 : 0
-            text: "download_done"
-            iconSize: Theme.font.normal
-            color: Theme.colPrimary
+            name: "downloaded"
+            size: Theme.font.normal
+            color: "#FA2D48"
             Accessible.ignored: !root.downloaded
             Accessible.name: qsTr("Downloaded")
         }
@@ -271,7 +270,7 @@ RippleSurface {
             id: overflow
 
             anchors.verticalCenter: parent.verticalCenter
-            icon: "more_vert"
+            icon: "more_horiz"
             iconSize: Theme.font.normal
             diameter: Theme.sized(38)
             opacity: root.hovered ? 1 : 0

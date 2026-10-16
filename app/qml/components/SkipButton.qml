@@ -32,11 +32,10 @@ RippleSurface {
             }
         }
 
-        Sym {
+        AppleIcon {
             anchors.centerIn: parent
-            text: root.forward ? "skip_next" : "skip_previous"
-            iconSize: root.iconSize
-            fill: 1
+            name: root.forward ? "skip_next" : "skip_previous"
+            size: root.iconSize
             color: Theme.colOnSurfaceVariant
             opacity: root.trackGlyph
             scale: 0.6 + 0.4 * root.trackGlyph

@@ -23,12 +23,14 @@ RippleSurface {
     colBackground: root.filled ? Theme.colPrimary : "transparent"
     colState: root.filled ? Theme.colOnPrimary : Theme.colOnSurface
 
-    Sym {
+    AppleIcon {
         anchors.centerIn: parent
-        text: root.icon
-        iconSize: root.iconSize
+        name: root.icon
+        size: root.iconSize
         fill: root.iconFill
         color: root.colIcon
+        active: root.toggled
+        activeColor: root.colIcon
         scale: root.pressed ? 0.86 : 1
 
         Behavior on scale {

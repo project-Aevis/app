@@ -72,26 +72,26 @@ Popover {
             rounding: root.itemRounding
             colState: entry.destructive ? Theme.colError : Theme.colOnSurface
 
-            Sym {
+            AppleIcon {
                 id: glyph
 
                 anchors.left: parent.left
                 anchors.leftMargin: root.itemPadding
                 anchors.verticalCenter: parent.verticalCenter
-                fill: entry.modelData.active === true ? 1 : 0
-                text: entry.modelData.icon
-                iconSize: root.itemGlyphSize
-                color: entry.destructive ? Theme.colError : Theme.colOnSurfaceVariant
+                name: entry.modelData.icon
+                size: Theme.sized(18)
+                color: entry.destructive ? "#FF3B30" : Theme.colOnSurfaceVariant
             }
 
             StyledText {
                 anchors.left: glyph.right
-                anchors.leftMargin: root.itemPadding
+                anchors.leftMargin: Theme.spaced(10)
                 anchors.right: parent.right
                 anchors.rightMargin: root.itemPadding
                 anchors.verticalCenter: parent.verticalCenter
                 text: entry.modelData.text
-                color: entry.destructive ? Theme.colError : Theme.colOnSurface
+                font.pixelSize: Theme.font.smallie
+                color: entry.destructive ? "#FF3B30" : Theme.colOnSurface
                 elide: Text.ElideRight
             }
 

@@ -27,7 +27,8 @@ Item {
             elide: Text.ElideRight
             text: root.title
             title: true
-            font.pixelSize: Theme.font.huge
+            font.pixelSize: Theme.sized(21)
+            font.weight: Font.Bold
             color: Theme.colOnSurface
         }
 
@@ -47,8 +48,10 @@ Item {
         anchors.right: parent.right
         anchors.verticalCenter: parent.verticalCenter
         visible: root.moreAvailable
-        ghost: root.moreGhost
-        text: qsTr("See all")
+        ghost: true
+        text: qsTr("See All")
+        icon: "chevron_right"
+        colState: "#FA2D48"
         onClicked: root.moreRequested()
     }
 }

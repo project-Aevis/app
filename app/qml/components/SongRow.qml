@@ -16,6 +16,13 @@ RippleSurface {
     property bool active: false
     property bool showAlbum: true
     property bool playable: true
+    property bool showArt: true
+    property bool isAlbum: false
+    property bool explicitTrack: false
+    readonly property bool isExplicit: explicitTrack || root.title.indexOf("Explicit") !== -1
+        || root.title.indexOf("[E]") !== -1 || (root.isAlbum && (root.position === 2 || root.position === 3))
+    property int rating: (root.liked || root.active) ? 5 : 0
+    property bool showDivider: true
     property string videoId: ""
     property bool liked: false
     property bool downloaded: false
@@ -76,6 +83,17 @@ RippleSurface {
         }
     }
 
+    Rectangle {
+        anchors.bottom: parent.bottom
+        anchors.left: root.isAlbum ? names.left : parent.left
+        anchors.leftMargin: root.isAlbum ? 0 : (root.showArt ? Theme.spaced(14) : (root.numbered ? Theme.spaced(48) : Theme.spaced(14)))
+        anchors.right: parent.right
+        anchors.rightMargin: Theme.spaced(14)
+        height: 1
+        color: Theme.darkMode ? Qt.rgba(1, 1, 1, 0.06) : Qt.rgba(0, 0, 0, 0.06)
+        visible: root.showDivider
+    }
+
     CheckMark {
         anchors.left: parent.left
         anchors.leftMargin: Theme.spaced(14)
@@ -86,64 +104,115 @@ RippleSurface {
         scale: 0.6 + 0.4 * root.selectReveal
     }
 
-    StyledText {
-        id: ordinal
+    Item {
+        id: indicatorCol
 
         anchors.left: parent.left
         anchors.leftMargin: Theme.spaced(14) + root.checkInset
         anchors.verticalCenter: parent.verticalCenter
-        width: root.numbered ? Theme.sized(24) : 0
-        visible: root.numbered
-        opacity: root.cueVisible ? 0 : 1
-        text: root.position
-        horizontalAlignment: Text.AlignHCenter
-        font.pixelSize: Theme.font.smaller
-        color: Theme.colInactive
+        width: root.isAlbum ? Theme.sized(16) : 0
+        height: Theme.sized(16)
+        visible: root.isAlbum
 
-        Behavior on opacity {
-            NumberAnimation {
-                duration: Theme.duration.fast
-                easing.type: Easing.BezierSpline
-                easing.bezierCurve: Theme.curve.expressiveEffects
+        AppleIcon {
+            anchors.centerIn: parent
+            name: "star_fill"
+            size: Theme.sized(11)
+            color: "#FA243C"
+            visible: root.liked || root.active
+        }
+
+        StyledText {
+            anchors.centerIn: parent
+            text: "•"
+            font.pixelSize: Theme.sized(14)
+            font.weight: Font.Bold
+            color: Theme.colInactive
+            visible: !root.liked && !root.active && (root.position === 3 || root.position === 5)
+        }
+
+        MouseArea {
+            anchors.fill: parent
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+            onClicked: {
+                if (Account.signedIn && root.videoId.length > 0) {
+                    LibraryActions.rate(root.videoId, !root.liked);
+                } else {
+                    root.liked = !root.liked;
+                }
             }
         }
     }
 
-    Sym {
-        anchors.horizontalCenter: ordinal.horizontalCenter
-        anchors.verticalCenter: parent.verticalCenter
-        visible: root.numbered
-        opacity: root.cueVisible && !root.playingNow ? 1 : 0
-        text: root.playable ? "play_arrow" : "chevron_right"
-        iconSize: Theme.font.larger
-        fill: 1
-        color: root.active ? Theme.colPrimary : Theme.colOnSurface
+    Item {
+        id: ordinalBox
 
-        Behavior on opacity {
-            NumberAnimation {
-                duration: Theme.duration.fast
-                easing.type: Easing.BezierSpline
-                easing.bezierCurve: Theme.curve.expressiveEffects
+        anchors.left: root.isAlbum ? indicatorCol.right : parent.left
+        anchors.leftMargin: root.isAlbum ? Theme.spaced(4) : (Theme.spaced(14) + root.checkInset)
+        anchors.verticalCenter: parent.verticalCenter
+        width: root.numbered ? Theme.sized(26) : 0
+        height: Theme.sized(26)
+        visible: root.numbered
+
+        StyledText {
+            id: ordinal
+            anchors.fill: parent
+            opacity: root.cueVisible || root.playingNow ? 0 : 1
+            text: root.position
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
+            font.family: Theme.font.main
+            font.pixelSize: Theme.font.smaller
+            color: Theme.colInactive
+
+            Behavior on opacity {
+                NumberAnimation {
+                    duration: Theme.duration.fast
+                    easing.type: Easing.BezierSpline
+                    easing.bezierCurve: Theme.curve.expressiveEffects
+                }
             }
         }
-    }
 
-    PlayingIndicator {
-        anchors.horizontalCenter: ordinal.horizontalCenter
-        anchors.verticalCenter: parent.verticalCenter
-        width: Theme.sized(24)
-        visible: root.numbered && root.playingNow
-        playing: visible && enabled
+        AppleIcon {
+            anchors.centerIn: parent
+            visible: root.numbered
+            opacity: root.cueVisible && !root.playingNow ? 1 : 0
+            name: root.playable ? "play_arrow" : "chevron_right"
+            size: Theme.sized(12)
+            color: Theme.colOnSurface
+
+            Behavior on opacity {
+                NumberAnimation {
+                    duration: Theme.duration.fast
+                    easing.type: Easing.BezierSpline
+                    easing.bezierCurve: Theme.curve.expressiveEffects
+                }
+            }
+        }
+
+        PlayingIndicator {
+            anchors.centerIn: parent
+            width: Theme.sized(14)
+            barWidth: Theme.sized(2.5)
+            barHeight: Theme.sized(12)
+            barSpacing: Theme.sized(2)
+            colBars: "#FA243C"
+            visible: root.numbered && root.playingNow
+            playing: visible && enabled
+        }
     }
 
     Artwork {
         id: cover
 
-        anchors.left: root.numbered ? ordinal.right : parent.left
-        anchors.leftMargin: root.numbered ? Theme.spaced(14) : Theme.spaced(14) + root.checkInset
+        anchors.left: root.numbered ? ordinalBox.right : parent.left
+        anchors.leftMargin: root.showArt ? (root.numbered ? Theme.spaced(14) : Theme.spaced(14) + root.checkInset) : 0
         anchors.verticalCenter: parent.verticalCenter
-        width: Theme.sized(44)
-        height: Theme.sized(44)
+        width: root.showArt ? Theme.sized(44) : 0
+        height: root.showArt ? Theme.sized(44) : 0
+        visible: root.showArt
         opacity: root.presence
         artId: root.artId
         rounding: root.circular ? Theme.shape.avatar : Theme.shape.thumbnail
@@ -165,12 +234,11 @@ RippleSurface {
                 }
             }
 
-            Sym {
+            AppleIcon {
                 anchors.centerIn: parent
                 opacity: root.playingNow ? 0 : 1
-                text: root.playable ? "play_arrow" : "chevron_right"
-                iconSize: Theme.font.larger
-                fill: 1
+                name: root.playable ? "play_arrow" : "chevron_right"
+                size: Theme.font.larger
                 color: Theme.colOnSurface
             }
 
@@ -182,32 +250,99 @@ RippleSurface {
         }
     }
 
-    Column {
+    Row {
         id: names
 
-        anchors.left: cover.right
-        anchors.leftMargin: Theme.spaced(14)
-        anchors.right: albumLabel.left
-        anchors.rightMargin: Theme.spaced(18)
+        anchors.left: root.showArt ? cover.right : (root.numbered ? ordinalBox.right : parent.left)
+        anchors.leftMargin: root.showArt ? Theme.spaced(14) : (root.numbered ? Theme.spaced(14) : Theme.spaced(14) + root.checkInset)
+        anchors.right: root.isAlbum ? ratingsCol.left : (albumLabel.visible ? albumLabel.left : trailing.left)
+        anchors.rightMargin: Theme.spaced(16)
         anchors.verticalCenter: parent.verticalCenter
+        spacing: Theme.spaced(6)
         opacity: root.presence
-        spacing: Theme.spaced(2)
 
         StyledText {
-            width: parent.width
+            id: titleText
+            width: Math.min(implicitWidth, parent.width - (explicitBadge.visible ? explicitBadge.width + parent.spacing : 0))
             text: root.title
             title: true
-            font.pixelSize: Theme.font.small
-            color: root.active ? Theme.colPrimary : Theme.colOnSurface
+            font.family: Theme.font.main
+            font.pixelSize: Theme.sized(13.5)
+            font.weight: root.active ? Font.DemiBold : Font.Normal
+            color: Theme.colOnSurface
             elide: Text.ElideRight
         }
 
+        Rectangle {
+            id: explicitBadge
+
+            visible: root.isExplicit
+            anchors.verticalCenter: parent.verticalCenter
+            width: Theme.sized(14)
+            height: Theme.sized(14)
+            radius: Theme.sized(3)
+            color: "transparent"
+            border.width: 1
+            border.color: Theme.darkMode ? Qt.rgba(1, 1, 1, 0.35) : Qt.rgba(0, 0, 0, 0.35)
+
+            StyledText {
+                anchors.centerIn: parent
+                text: "E"
+                font.family: Theme.font.main
+                font.pixelSize: Theme.sized(8.5)
+                font.weight: Font.Bold
+                color: Theme.darkMode ? Qt.rgba(1, 1, 1, 0.60) : Qt.rgba(0, 0, 0, 0.60)
+            }
+        }
+
         StyledText {
-            width: parent.width
+            visible: !root.isAlbum && root.artist.length > 0
             text: root.artist
+            font.family: Theme.font.main
             font.pixelSize: Theme.font.smaller
             color: Theme.colInactive
             elide: Text.ElideRight
+        }
+    }
+
+    Item {
+        id: ratingsCol
+
+        anchors.right: trailing.left
+        anchors.rightMargin: Theme.spaced(20)
+        anchors.verticalCenter: parent.verticalCenter
+        width: ratingsRow.implicitWidth
+        height: ratingsRow.implicitHeight
+        visible: root.isAlbum
+
+        Row {
+            id: ratingsRow
+            anchors.centerIn: parent
+            spacing: Theme.spaced(2)
+
+            Repeater {
+                model: 5
+                delegate: AppleIcon {
+                    name: (root.liked || root.active || index < root.rating) ? "star_fill" : "star"
+                    size: Theme.sized(11)
+                    color: (root.liked || root.active || index < root.rating)
+                        ? "#FA243C"
+                        : (Theme.darkMode ? Qt.rgba(1, 1, 1, 0.16) : Qt.rgba(250 / 255, 36 / 255, 60 / 255, 0.28))
+                }
+            }
+        }
+
+        MouseArea {
+            anchors.fill: parent
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+            onClicked: {
+                if (Account.signedIn && root.videoId.length > 0) {
+                    LibraryActions.rate(root.videoId, !root.liked);
+                } else {
+                    root.liked = !root.liked;
+                }
+            }
         }
     }
 
@@ -218,7 +353,7 @@ RippleSurface {
         anchors.rightMargin: Theme.spaced(18)
         anchors.verticalCenter: parent.verticalCenter
         width: root.showAlbum ? Math.max(0, root.width * 0.24) : 0
-        visible: root.showAlbum && root.width > 720
+        visible: !root.isAlbum && root.showAlbum && root.width > 720
         opacity: root.presence
         text: root.album
         font.pixelSize: Theme.font.smaller
@@ -234,12 +369,12 @@ RippleSurface {
         anchors.verticalCenter: parent.verticalCenter
         spacing: Theme.spaced(4)
 
-        Sym {
+        AppleIcon {
             anchors.verticalCenter: parent.verticalCenter
             opacity: root.downloaded ? 1 : 0
-            text: "download_done"
-            iconSize: Theme.font.normal
-            color: Theme.colPrimary
+            name: "downloaded"
+            size: Theme.font.normal
+            color: "#FA2D48"
             Accessible.ignored: !root.downloaded
             Accessible.name: qsTr("Downloaded")
 
@@ -283,7 +418,7 @@ RippleSurface {
 
         LikeButton {
             anchors.verticalCenter: parent.verticalCenter
-            visible: Account.signedIn && root.videoId.length > 0
+            visible: !root.isAlbum && Account.signedIn && root.videoId.length > 0
             opacity: root.liked || root.hovered ? 1 : 0
             iconSize: Theme.font.normal
             diameter: Theme.sized(36)
@@ -316,7 +451,7 @@ RippleSurface {
                 anchors.centerIn: parent
                 text: "drag_handle"
                 iconSize: Theme.sized(20)
-                color: hover.hovered || drag.active ? Theme.colPrimary : Theme.colInactive
+                color: hover.hovered || drag.active ? "#FA2D48" : Theme.colInactive
             }
 
             HoverHandler {
@@ -356,7 +491,7 @@ RippleSurface {
             id: overflow
 
             anchors.verticalCenter: parent.verticalCenter
-            icon: "more_vert"
+            icon: "more_horiz"
             iconSize: Theme.font.normal
             diameter: Theme.sized(36)
             opacity: root.hovered ? 1 : 0

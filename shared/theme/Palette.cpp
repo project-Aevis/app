@@ -113,8 +113,6 @@ void Palette::reload()
         this->*role.member = chosen.isValid() ? chosen : QColor(QLatin1String(role.fallback));
     }
 
-    QGuiApplication::styleHints()->setColorScheme(darkMode() ? Qt::ColorScheme::Dark
-                                                             : Qt::ColorScheme::Light);
     Q_EMIT changed();
 }
 

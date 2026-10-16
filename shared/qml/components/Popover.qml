@@ -63,10 +63,10 @@ Popup {
             width: parent.width
             implicitHeight: column.implicitHeight + root.inset * 2
             height: implicitHeight * (0.42 + 0.58 * body.reveal)
-            radius: root.rounding
-            color: Theme.colLayer3
-            border.width: Theme.elevation.outline
-            border.color: Theme.colOutlineVariant
+            radius: Theme.sized(12)
+            color: Theme.darkMode ? Qt.rgba(0.16, 0.16, 0.19, 0.96) : Qt.rgba(0.97, 0.97, 0.98, 0.96)
+            border.width: 1
+            border.color: Theme.darkMode ? Qt.rgba(1, 1, 1, 0.12) : Qt.rgba(0, 0, 0, 0.08)
             clip: true
 
             Column {

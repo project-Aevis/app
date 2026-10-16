@@ -94,6 +94,8 @@ Item {
             position: root.itemIndex + 1
             numbered: root.sectionIndex === 0 && root.page
                 && (root.page.kind === "playlist" || root.page.kind === "album")
+            isAlbum: root.page && root.page.kind === "album"
+            showArt: !(root.page && root.page.kind === "album")
             title: root.entry.title
             artist: root.entry.episode ? root.entry.subtitle : root.entry.track.artist || root.entry.subtitle
             album: root.entry.playable ? root.entry.track.album : ""
@@ -103,6 +105,8 @@ Item {
             videoId: root.entry.track.videoId
             liked: root.entry.track.liked
             downloaded: root.entry.playable && Downloads.ids.includes(root.entry.track.videoId)
+            explicitTrack: (root.entry && root.entry.subtitle && root.entry.subtitle.indexOf("Explicit") !== -1)
+                || (root.entry && root.entry.title && root.entry.title.indexOf("Explicit") !== -1)
             playable: root.entry.playable
             circular: root.entry.circular
             reorderable: !!root.reorder && !!root.page && root.page.reorderable

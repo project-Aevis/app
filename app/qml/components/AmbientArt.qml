@@ -11,31 +11,34 @@ Item {
 
     readonly property string source: root.artId
         ? "image://art/" + encodeURIComponent(root.artId) : ""
-    readonly property int canvasWidth: 128
+    readonly property int canvasWidth: 512
     readonly property int canvasHeight: Math.max(1, Math.round(
         root.canvasWidth * root.height / Math.max(1, root.width)))
 
     Item {
         id: canvas
 
+        anchors.centerIn: parent
         width: root.canvasWidth
         height: root.canvasHeight
-        transformOrigin: Item.TopLeft
-        scale: root.width / root.canvasWidth
+        scale: Math.max(root.width / root.canvasWidth, root.height / root.canvasHeight) * 1.35
         layer.enabled: true
         layer.smooth: true
         layer.effect: MultiEffect {
             blurEnabled: true
-            blur: 1
-            blurMax: 16
+            blur: 1.0
+            blurMax: 56
+            saturation: 0.65
+            contrast: 0.16
+            brightness: 0.04
         }
 
         Image {
             id: leading
 
             anchors.fill: parent
-            sourceSize.width: 96
-            sourceSize.height: 96
+            sourceSize.width: 512
+            sourceSize.height: 512
             fillMode: Image.PreserveAspectCrop
             asynchronous: true
             opacity: 1 - root.blend
@@ -47,8 +50,8 @@ Item {
             id: trailing
 
             anchors.fill: parent
-            sourceSize.width: 96
-            sourceSize.height: 96
+            sourceSize.width: 512
+            sourceSize.height: 512
             fillMode: Image.PreserveAspectCrop
             asynchronous: true
             opacity: root.blend

@@ -20,12 +20,19 @@
 #include "update/Updater.h"
 
 #include <QApplication>
+#include <QFont>
 #include <QIcon>
+#include <QPixmapCache>
 #include <QProcess>
 #include <QQmlApplicationEngine>
 #include <QQuickStyle>
 #include <QQuickWindow>
+#include <QTimer>
 #include <QtWebEngineQuick>
+
+#if defined(Q_OS_LINUX) && defined(__GLIBC__)
+#include <malloc.h>
+#endif
 
 namespace {
 
@@ -38,10 +45,16 @@ QQuickWindow *shellWindow(const QQmlApplicationEngine &engine)
 int run(int argc, char *argv[], QStringList &relaunch)
 {
     QApplication app(argc, argv);
+    QPixmapCache::setCacheLimit(4096);
 #ifndef Q_OS_MACOS
     QApplication::setWindowIcon(QIcon(QStringLiteral(":/icons/ht-music.svg")));
 #endif
     core::fonts::install();
+
+    QFont appFont(QStringLiteral("SF Pro Text"));
+    appFont.setPixelSize(13);
+    appFont.setStyleStrategy(QFont::PreferAntialias);
+    QApplication::setFont(appFont);
 
     platform::SingleInstance running;
     if (!running.claim())
@@ -56,6 +69,16 @@ int run(int argc, char *argv[], QStringList &relaunch)
     library::ImageCache imageCache;
     QQmlApplicationEngine engine;
     engine.addImageProvider(QStringLiteral("art"), new media::ArtworkProvider(imageCache));
+
+    auto *cleanupTimer = new QTimer(&app);
+    cleanupTimer->setInterval(30000);
+    QObject::connect(cleanupTimer, &QTimer::timeout, &app, [&engine] {
+        engine.trimComponentCache();
+#if defined(Q_OS_LINUX) && defined(__GLIBC__)
+        malloc_trim(0);
+#endif
+    });
+    cleanupTimer->start();
 
     QObject::connect(&localization, &core::Localization::resolvedChanged, &engine,
                      [&engine] { engine.retranslate(); });
@@ -101,9 +124,24 @@ int run(int argc, char *argv[], QStringList &relaunch)
 
 int main(int argc, char *argv[])
 {
+#if defined(Q_OS_LINUX) && defined(__GLIBC__)
+    mallopt(M_ARENA_MAX, 2);
+    mallopt(M_TRIM_THRESHOLD, 128 * 1024);
+#endif
+
     core::AppInfo::identify();
     core::logging::install();
     diagnostics::guardTermination();
+
+    if (!qEnvironmentVariableIsSet("QTWEBENGINE_CHROMIUM_FLAGS")) {
+        qputenv("QTWEBENGINE_CHROMIUM_FLAGS",
+                "--renderer-process-limit=1 "
+                "--disable-gpu-shader-disk-cache "
+                "--enable-low-end-device-mode "
+                "--js-flags=--max-old-space-size=64 "
+                "--disable-features=BackForwardCache,MediaEngagementBypassAutoplayPolicies,PreloadMediaEngagementData,Translate "
+                "--disable-site-isolation-trials");
+    }
 
     QQuickStyle::setStyle(QStringLiteral("Basic"));
     QtWebEngineQuick::initialize();

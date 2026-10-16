@@ -125,6 +125,13 @@ QtObject {
                 menu.push(root.downloadAction(entry));
         }
         menu.push({ icon: "share", text: qsTr("Share"), action: "share" });
+        const playlistKey = entry.playlistId.length > 0 ? entry.playlistId : (entry.playlistTarget.length > 0 ? entry.playlistTarget : (entry.kind === "playlist" ? entry.browseId : ""));
+        if (playlistKey.length > 0) {
+            const isSidebarPinned = LibraryActions.isPlaylistPinned(playlistKey);
+            menu.push(isSidebarPinned
+                ? { icon: "keep_off", text: qsTr("Unpin from sidebar"), action: "unpinSidebar", active: true }
+                : { icon: "keep", text: qsTr("Pin to sidebar"), action: "pinSidebar" });
+        }
         if (writable && entry.actions.pinnable) {
             menu.push(entry.pinned
                 ? { icon: "keep_off", text: qsTr("Unpin from Listen again"), action: "unpin", active: true }
@@ -247,6 +254,16 @@ QtObject {
         case "share":
             root.share(entry);
             break;
+        case "pinSidebar": {
+            const key = entry.playlistId.length > 0 ? entry.playlistId : (entry.playlistTarget.length > 0 ? entry.playlistTarget : entry.browseId);
+            LibraryActions.pinPlaylist(key, entry.title, entry.artId);
+            break;
+        }
+        case "unpinSidebar": {
+            const key = entry.playlistId.length > 0 ? entry.playlistId : (entry.playlistTarget.length > 0 ? entry.playlistTarget : entry.browseId);
+            LibraryActions.unpinPlaylist(key);
+            break;
+        }
         case "pin":
         case "unpin":
             LibraryActions.togglePinned(entry);

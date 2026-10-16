@@ -17,10 +17,10 @@ Item {
         radius: root.rounding
         color: Theme.colLayer3
 
-        Sym {
+        AppleIcon {
             anchors.centerIn: parent
-            text: "music_note"
-            iconSize: Math.max(Theme.sized(16), Math.min(parent.width, parent.height) * 0.34)
+            name: "music_note"
+            size: Math.max(Theme.sized(16), Math.min(parent.width, parent.height) * 0.34)
             color: Theme.colInactive
         }
     }

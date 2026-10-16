@@ -15,10 +15,10 @@
 
 namespace {
 
-constexpr const char *kDemuxerMaxBytes = "32MiB";
-constexpr const char *kDemuxerMaxBackBytes = "8MiB";
-constexpr const char *kBoundedRequests = "request_size=10485760,multiple_requests=1";
-constexpr const char *kBoundedRequestSize = "10MiB";
+constexpr const char *kDemuxerMaxBytes = "8MiB";
+constexpr const char *kDemuxerMaxBackBytes = "2MiB";
+constexpr const char *kBoundedRequests = "request_size=2097152,multiple_requests=1";
+constexpr const char *kBoundedRequestSize = "2MiB";
 constexpr double kSilenceDb = -96.0;
 constexpr int kTrimIntervalMs = 900;
 constexpr int kTrimSamples = 4;

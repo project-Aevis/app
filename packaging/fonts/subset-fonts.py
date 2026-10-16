@@ -4,9 +4,15 @@ import re
 import string
 import sys
 
-import fontTools.subset
-import fontTools.ttLib
-import fontTools.varLib.instancer
+import shutil
+
+try:
+    import fontTools.subset
+    import fontTools.ttLib
+    import fontTools.varLib.instancer
+    HAS_FONTTOOLS = True
+except ImportError:
+    HAS_FONTTOOLS = False
 
 SYMBOL_FONT = "MaterialSymbolsRounded.ttf"
 TEXT_FONT = "RobotoFlex.ttf"
@@ -97,11 +103,18 @@ def main() -> int:
 
     symbols_source = os.path.join(arguments.source, SYMBOL_FONT)
     symbols_target = os.path.join(arguments.output, SYMBOL_FONT)
+    text_source = os.path.join(arguments.source, TEXT_FONT)
+    text_target = os.path.join(arguments.output, TEXT_FONT)
+
+    if not HAS_FONTTOOLS:
+        print("subset-fonts: fontTools not installed; copying full fonts")
+        shutil.copyfile(symbols_source, symbols_target)
+        shutil.copyfile(text_source, text_target)
+        return 0
+
     kept = subset_symbols(symbols_source, symbols_target, arguments.scan)
     report(SYMBOL_FONT, symbols_source, symbols_target, f"{kept} icons")
 
-    text_source = os.path.join(arguments.source, TEXT_FONT)
-    text_target = os.path.join(arguments.output, TEXT_FONT)
     pinned = pin_text_axes(text_source, text_target)
     report(TEXT_FONT, text_source, text_target, f"{pinned} axes pinned")
     return 0

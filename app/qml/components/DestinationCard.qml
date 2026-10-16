@@ -23,11 +23,10 @@ RippleSurface {
         radius: Theme.shape.plate
         color: Theme.colPrimaryContainer
 
-        Sym {
+        AppleIcon {
             anchors.centerIn: parent
-            text: root.icon
-            iconSize: Theme.font.huge
-            fill: 1
+            name: root.icon
+            size: Theme.font.huge
             color: Theme.colOnPrimaryContainer
         }
     }
@@ -44,14 +43,14 @@ RippleSurface {
         elide: Text.ElideRight
     }
 
-    Sym {
+    AppleIcon {
         id: chevron
 
         anchors.right: parent.right
         anchors.rightMargin: Theme.spaced(16)
         anchors.verticalCenter: parent.verticalCenter
-        text: "chevron_right"
-        iconSize: Theme.font.larger
+        name: "chevron_right"
+        size: Theme.sized(16)
         color: Theme.colOnSurfaceVariant
 
         transform: Translate {

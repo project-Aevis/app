@@ -17,7 +17,17 @@ RippleSurface {
     rounding: Theme.shape.playButton
     colBackground: Theme.colPrimary
     colState: Theme.colOnPrimary
+    property color colGlyph: Theme.colOnPrimary
     Accessible.name: root.playing ? qsTr("Pause") : qsTr("Play")
+
+    scale: root.pressed ? 0.90 : root.hovered ? 1.08 : 1.0
+    Behavior on scale {
+        NumberAnimation {
+            duration: Theme.duration.fast
+            easing.type: Easing.BezierSpline
+            easing.bezierCurve: Theme.curve.expressiveFastSpatial
+        }
+    }
 
     Shape {
         id: glyph
@@ -32,7 +42,7 @@ RippleSurface {
 
         ShapePath {
             strokeWidth: -1
-            fillColor: Theme.colOnPrimary
+            fillColor: root.colGlyph
             startX: (8 - 2 * root.morph) * glyph.unit
             startY: (5 - root.morph) * glyph.unit
 

@@ -18,6 +18,7 @@ enum Role {
     Title = Qt::UserRole,
     Subtitle,
     ArtId,
+    PlaylistId,
 };
 
 const QString kEndpoint = QStringLiteral("playlist/get_add_to_playlist");
@@ -66,13 +67,17 @@ QVariant PlaylistTargets::data(const QModelIndex &index, int role) const
     case Title: return target.title;
     case Subtitle: return target.subtitle;
     case ArtId: return target.artId;
+    case PlaylistId: return target.playlistId;
     default: return {};
     }
 }
 
 QHash<int, QByteArray> PlaylistTargets::roleNames() const
 {
-    return {{Title, "targetTitle"}, {Subtitle, "targetSubtitle"}, {ArtId, "targetArtId"}};
+    return {{Title, "targetTitle"},
+            {Subtitle, "targetSubtitle"},
+            {ArtId, "targetArtId"},
+            {PlaylistId, "targetPlaylistId"}};
 }
 
 void PlaylistTargets::show(const QStringList &videoIds)
@@ -116,6 +121,31 @@ void PlaylistTargets::reload()
     m_endpoints.action(
         kEndpoint,
         {{QStringLiteral("videoIds"), videoIds}, {QStringLiteral("excludeWatchLater"), false}},
+        [guard, generation](const innertube::Reply &reply) {
+        if (guard)
+            guard->accept(reply, generation);
+    });
+}
+
+void PlaylistTargets::loadAccountPlaylists()
+{
+    if (!auth::Account::instance().signedIn())
+        return;
+    if (!m_targets.isEmpty() && !m_loading)
+        return;
+    beginResetModel();
+    m_targets.clear();
+    endResetModel();
+    m_error.clear();
+    m_unreachable = false;
+    m_loading = true;
+    Q_EMIT stateChanged();
+
+    const quint64 generation = ++m_generation;
+    const QPointer<PlaylistTargets> guard(this);
+    m_endpoints.action(
+        kEndpoint,
+        {{QStringLiteral("videoIds"), QJsonArray{}}, {QStringLiteral("excludeWatchLater"), false}},
         [guard, generation](const innertube::Reply &reply) {
         if (guard)
             guard->accept(reply, generation);

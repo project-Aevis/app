@@ -53,6 +53,8 @@ WebLogin::WebLogin(QObject *parent)
     m_profile->setPersistentStoragePath(core::paths::dataDir() + QLatin1Char('/') + kStorageName);
     m_profile->setCachePath(core::paths::cacheDir() + QLatin1Char('/') + kStorageName);
     m_profile->setPersistentCookiesPolicy(QQuickWebEngineProfile::ForcePersistentCookies);
+    m_profile->setHttpCacheType(QQuickWebEngineProfile::MemoryHttpCache);
+    m_profile->setHttpCacheMaximumSize(4 * 1024 * 1024);
     m_profile->setHttpAcceptLanguage(kAcceptLanguage);
     m_profile->clientHints()->setAllClientHintsEnabled(false);
     applyAgent();

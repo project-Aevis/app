@@ -62,16 +62,16 @@ PillButton {
                     elide: Text.ElideRight
                 }
 
-                Sym {
+                AppleIcon {
                     id: tick
 
                     anchors.right: parent.right
                     anchors.rightMargin: Theme.spaced(14)
                     anchors.verticalCenter: parent.verticalCenter
-                    text: "check"
-                    iconSize: Theme.sized(20)
+                    name: "check"
+                    size: Theme.sized(18)
                     opacity: option.modelData.selected ? 1 : 0
-                    color: Theme.colOnSecondaryContainer
+                    color: "#FA2D48"
                 }
 
                 onClicked: {

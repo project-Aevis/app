@@ -8,6 +8,9 @@
 #include "ThemeColors.h"
 
 #include <QCoreApplication>
+#include <QDir>
+#include <QFile>
+#include <QFileInfo>
 #include <QGuiApplication>
 #include <QSettings>
 #include <QStandardPaths>
@@ -71,6 +74,32 @@ QString plasmaFile()
     if (!desktopShellsRunHere())
         return {};
     return underHome(QStandardPaths::GenericConfigLocation, QStringLiteral("kdeglobals"));
+}
+
+QString cutefishConfigFile()
+{
+    if (!desktopShellsRunHere())
+        return {};
+    const QString aevisPath = underHome(QStandardPaths::GenericConfigLocation, QStringLiteral("aevis/theme.conf"));
+    if (QFile::exists(aevisPath))
+        return aevisPath;
+    return underHome(QStandardPaths::GenericConfigLocation, QStringLiteral("cutefishos/theme.conf"));
+}
+
+Qt::ColorScheme readCutefishScheme()
+{
+    for (const auto &rel : { QStringLiteral("aevis/theme.conf"), QStringLiteral("cutefishos/theme.conf") }) {
+        const QString path = underHome(QStandardPaths::GenericConfigLocation, rel);
+        if (!path.isEmpty() && QFile::exists(path)) {
+            const QSettings settings(path, QSettings::IniFormat);
+            if (settings.contains(QStringLiteral("General/DarkMode"))) {
+                return settings.value(QStringLiteral("General/DarkMode")).toBool()
+                    ? Qt::ColorScheme::Dark
+                    : Qt::ColorScheme::Light;
+            }
+        }
+    }
+    return Qt::ColorScheme::Unknown;
 }
 
 }
@@ -170,6 +199,26 @@ void SystemTheme::discover()
         connect(source, &ColorSource::changed, this, &SystemTheme::changed);
         source->refresh();
     }
+
+    for (const auto &rel : { QStringLiteral("aevis/theme.conf"), QStringLiteral("cutefishos/theme.conf") }) {
+        const QString path = underHome(QStandardPaths::GenericConfigLocation, rel);
+        if (!path.isEmpty()) {
+            const QString dir = QFileInfo(path).absolutePath();
+            if (QDir(dir).exists())
+                m_watcher.addPath(dir);
+            if (QFile::exists(path))
+                m_watcher.addPath(path);
+        }
+    }
+    connect(&m_watcher, &QFileSystemWatcher::fileChanged, this, &SystemTheme::changed);
+    connect(&m_watcher, &QFileSystemWatcher::directoryChanged, this, &SystemTheme::changed);
+
+    if (auto *hints = QGuiApplication::styleHints()) {
+        connect(hints, &QStyleHints::colorSchemeChanged, this, [this](Qt::ColorScheme scheme) {
+            m_platformScheme = scheme;
+            Q_EMIT changed();
+        });
+    }
 }
 
 const ColorSource *SystemTheme::active() const
@@ -187,16 +236,34 @@ const ColorSource *SystemTheme::active() const
 
 Qt::ColorScheme SystemTheme::colorScheme() const
 {
-    if (const ColorSource *source = active();
-        source && source->colorScheme() != Qt::ColorScheme::Unknown) {
-        return source->colorScheme();
+    const Qt::ColorScheme cutefish = readCutefishScheme();
+    if (cutefish != Qt::ColorScheme::Unknown)
+        return cutefish;
+
+    for (const ColorSource *source : m_sources) {
+        if (source->id() == QLatin1String("platform") && source->colorScheme() != Qt::ColorScheme::Unknown)
+            return source->colorScheme();
+    }
+
+    if (auto *hints = QGuiApplication::styleHints(); hints && hints->colorScheme() != Qt::ColorScheme::Unknown)
+        return hints->colorScheme();
+
+    if (m_platformScheme != Qt::ColorScheme::Unknown)
+        return m_platformScheme;
+
+    if (!m_preferredId.isEmpty()) {
+        if (const ColorSource *source = active();
+            source && source->colorScheme() != Qt::ColorScheme::Unknown) {
+            return source->colorScheme();
+        }
     }
 
     for (const ColorSource *source : m_sources) {
-        if (source->colorScheme() != Qt::ColorScheme::Unknown)
+        if (source->available() && source->colorScheme() != Qt::ColorScheme::Unknown)
             return source->colorScheme();
     }
-    return m_platformScheme;
+
+    return Qt::ColorScheme::Dark;
 }
 
 }

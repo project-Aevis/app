@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Effects
 import HtMusic
 
 RippleSurface {
@@ -30,11 +31,18 @@ RippleSurface {
         id: cover
 
         x: root.inset
-        y: root.inset
+        y: root.hovered ? root.inset - 3 : root.inset
         width: root.artSize * (root.video ? 16 / 9 : 1)
         height: root.artSize
-        scale: root.hovered ? 1.03 : 1
+        scale: root.hovered ? 1.035 : 1
 
+        Behavior on y {
+            NumberAnimation {
+                duration: Theme.duration.fast
+                easing.type: Easing.BezierSpline
+                easing.bezierCurve: Theme.curve.expressiveEffects
+            }
+        }
         Behavior on scale {
             NumberAnimation {
                 duration: Theme.duration.fast
@@ -43,12 +51,37 @@ RippleSurface {
             }
         }
 
+        RectangularShadow {
+            anchors.fill: parent
+            radius: art.rounding
+            blur: root.hovered ? 20 : 12
+            spread: 0.5
+            offset: Qt.vector2d(0, root.hovered ? 6 : 4)
+            color: Qt.rgba(0, 0, 0, root.hovered ? 0.35 : 0.22)
+            visible: !root.circular
+
+            Behavior on blur {
+                NumberAnimation {
+                    duration: Theme.duration.fast
+                    easing.type: Easing.BezierSpline
+                    easing.bezierCurve: Theme.curve.expressiveEffects
+                }
+            }
+            Behavior on offset {
+                PropertyAnimation {
+                    duration: Theme.duration.fast
+                    easing.type: Easing.BezierSpline
+                    easing.bezierCurve: Theme.curve.expressiveEffects
+                }
+            }
+        }
+
         Artwork {
             id: art
 
             anchors.fill: parent
             artId: root.artId
-            rounding: root.circular ? Theme.shape.avatar : Theme.shape.artwork
+            rounding: root.circular ? Theme.shape.avatar : Theme.sized(12)
         }
 
         Rectangle {
@@ -77,12 +110,11 @@ RippleSurface {
             color: ColorUtils.withAlpha(Theme.colLayer1, 0.85)
             visible: root.pinned
 
-            Sym {
+            AppleIcon {
                 anchors.centerIn: parent
-                text: "keep"
-                iconSize: Theme.font.normal
-                fill: 1
-                color: Theme.colPrimary
+                name: "favorite"
+                size: Theme.font.normal
+                color: "#FA2D48"
             }
         }
 
@@ -109,6 +141,7 @@ RippleSurface {
                 barWidth: Theme.sized(4)
                 barHeight: Theme.sized(24)
                 barSpacing: Theme.sized(4)
+                colBars: "#FA2D48"
                 playing: root.playingNow
             }
         }
@@ -119,7 +152,7 @@ RippleSurface {
             anchors.right: parent.right
             anchors.top: parent.top
             anchors.margins: Theme.spaced(6)
-            icon: "more_vert"
+            icon: "more_horiz"
             iconSize: Theme.sized(20)
             diameter: Theme.sized(34)
             colBackground: ColorUtils.withAlpha(Theme.colLayer1, 0.85)
@@ -144,15 +177,27 @@ RippleSurface {
         IconButton {
             x: root.playable || root.circular ? (parent.width - width) / 2 : parent.width - width - Theme.spaced(10)
             y: root.playable || root.circular ? (parent.height - height) / 2 : parent.height - height - Theme.spaced(10)
-            icon: "play_arrow"
-            Accessible.name: qsTr("Play")
-            iconSize: Theme.sized(24)
+            icon: root.playingNow ? "pause" : "play_arrow"
+            Accessible.name: root.playingNow ? qsTr("Pause") : qsTr("Play")
+            iconSize: Theme.sized(20)
             diameter: Theme.sized(44)
+            colBackground: "#FA2D48"
+            colIcon: "#FFFFFF"
             filled: true
             opacity: root.cueVisible ? 1 : 0
             scale: root.cueVisible ? 1 : 0.7
             interactive: root.cueVisible
             onClicked: root.playRequested()
+
+            RectangularShadow {
+                anchors.fill: parent
+                radius: width / 2
+                blur: 14
+                spread: 0
+                offset: Qt.vector2d(0, 4)
+                color: Qt.rgba(0.98, 0.18, 0.28, 0.45)
+                z: -1
+            }
 
             Behavior on opacity {
                 NumberAnimation {
@@ -186,7 +231,8 @@ RippleSurface {
             title: true
             horizontalAlignment: root.circular ? Text.AlignHCenter : Text.AlignLeft
             font.pixelSize: Theme.font.small
-            color: root.active ? Theme.colPrimary : Theme.colOnSurface
+            font.weight: Font.DemiBold
+            color: root.active ? "#FA2D48" : Theme.colOnSurface
             elide: Text.ElideRight
         }
 

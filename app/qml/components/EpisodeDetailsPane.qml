@@ -86,11 +86,11 @@ Item {
                     anchors.centerIn: parent
                     spacing: Theme.spaced(8)
 
-                    Sym {
+                    AppleIcon {
                         anchors.verticalCenter: parent.verticalCenter
-                        text: "podcasts"
-                        iconSize: Theme.sized(18)
-                        color: Theme.colPrimary
+                        name: "browse"
+                        size: Theme.sized(18)
+                        color: "#FA2D48"
                     }
 
                     StyledText {
@@ -100,11 +100,11 @@ Item {
                         font.pixelSize: Theme.font.smallie
                     }
 
-                    Sym {
+                    AppleIcon {
                         anchors.verticalCenter: parent.verticalCenter
                         visible: EpisodeDetails.podcastId.length > 0
-                        text: "chevron_right"
-                        iconSize: Theme.sized(18)
+                        name: "chevron_right"
+                        size: Theme.sized(16)
                         color: Theme.colOnSurfaceVariant
                     }
                 }

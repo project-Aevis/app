@@ -96,6 +96,7 @@ qt_add_qml_module(htmusic-shared
         qml/components/RoundedMask.qml
         qml/components/Wordmark.qml
         qml/components/Sym.qml
+        qml/components/AppleIcon.qml
         qml/components/RippleSurface.qml
         qml/components/MaterialToolTip.qml
         qml/components/CheckMark.qml

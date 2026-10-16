@@ -18,10 +18,14 @@
 #include <algorithm>
 #include <cstddef>
 
+#if defined(Q_OS_LINUX) && defined(__GLIBC__)
+#include <malloc.h>
+#endif
+
 namespace {
 
 constexpr int kConcurrentRequests = 12;
-constexpr int kMemoryLimitKiB = 48 * 1024;
+constexpr int kMemoryLimitKiB = 16 * 1024;
 constexpr qint64 kDiskLimit = 256 * 1024 * 1024;
 constexpr quint32 kEntryFormat = 0x68746d31;
 constexpr qint64 kDeltaSecondsLimit = 2147483648;
@@ -357,6 +361,10 @@ void ImageCache::pruneDisk()
         if (total > kDiskLimit)
             QFile::remove(file.absoluteFilePath());
     }
+
+#if defined(Q_OS_LINUX) && defined(__GLIBC__)
+    malloc_trim(0);
+#endif
 }
 
 }

@@ -332,6 +332,17 @@ qt_add_resources(ht-music "models"
     FILES ${PROJECT_SOURCE_DIR}/assets/models/beat-this-small0.bin
 )
 
+qt_add_resources(ht-music "sidebar_assets"
+    PREFIX "/assets/sidebar"
+    BASE ${PROJECT_SOURCE_DIR}/assets/sidebar
+    FILES
+        ${PROJECT_SOURCE_DIR}/assets/sidebar/pin_romantic.png
+        ${PROJECT_SOURCE_DIR}/assets/sidebar/pin_cruel_world.png
+        ${PROJECT_SOURCE_DIR}/assets/sidebar/pin_boys_dung.png
+        ${PROJECT_SOURCE_DIR}/assets/sidebar/pin_work_focus.png
+        ${PROJECT_SOURCE_DIR}/assets/sidebar/danny_rico.png
+)
+
 target_include_directories(ht-music PRIVATE
     ${CMAKE_CURRENT_BINARY_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}
@@ -377,6 +388,7 @@ qt_add_qml_module(ht-music
         qml/components/SearchBar.qml
         qml/components/NavRail.qml
         qml/components/NavItem.qml
+        qml/components/MacTrafficLights.qml
         qml/components/Card.qml
         qml/components/CreditLine.qml
         qml/components/Shelf.qml
@@ -391,6 +403,9 @@ qt_add_qml_module(ht-music
         qml/components/QueuePane.qml
         qml/components/LyricsPane.qml
         qml/pages/BrowsePage.qml
+        qml/pages/SongsPage.qml
+        qml/pages/AlbumsPage.qml
+        qml/pages/ArtistsPage.qml
         qml/components/BrowseHeader.qml
         qml/components/BrowseRow.qml
         qml/components/ChipRow.qml
@@ -501,4 +516,7 @@ if(LINUX OR (UNIX AND NOT APPLE))
     install(FILES ht-music.desktop DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/applications)
     install(FILES ${PROJECT_SOURCE_DIR}/assets/ht-music.svg
         DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/scalable/apps)
+    install(FILES ${PROJECT_SOURCE_DIR}/assets/ht-music.svg
+        DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/scalable/apps
+        RENAME cutefish-music.svg)
 endif()

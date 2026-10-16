@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Effects
 import HtMusic
 
 Rectangle {
@@ -11,7 +12,7 @@ Rectangle {
     property bool glass: false
     property int selectedEntry: -1
     property string icon: "search"
-    property string placeholder: qsTr("Search songs, albums, artists")
+    property string placeholder: qsTr("Artists, Songs, Lyrics, and More...")
     property real textPhase: 0
 
     readonly property bool recalling: input.text.trim().length === 0
@@ -51,12 +52,31 @@ Rectangle {
         retarget.restart();
     }
 
-    implicitHeight: Theme.sized(46)
-    radius: Theme.shape.searchField
-    color: root.glass ? ColorUtils.withAlpha(Theme.colLayer2, 0.55)
-        : focusRing.visible ? Theme.colLayer2 : Theme.colLayer1
-    border.width: 1
-    border.color: input.activeFocus ? Theme.colPrimary : Theme.colOutlineVariant
+    implicitHeight: Theme.sized(36)
+    radius: height / 2
+
+    scale: input.activeFocus ? 1.01 : (hover.hovered ? 1.006 : 1.0)
+    Behavior on scale {
+        NumberAnimation {
+            duration: Theme.duration.fast
+            easing.type: Easing.BezierSpline
+            easing.bezierCurve: Theme.curve.expressiveEffects
+        }
+    }
+
+    color: root.glass
+        ? ColorUtils.withAlpha(Theme.colLayer2, 0.55)
+        : (Theme.darkMode
+            ? (input.activeFocus ? Qt.rgba(1, 1, 1, 0.14)
+                : (hover.hovered ? Qt.rgba(1, 1, 1, 0.12)
+                : Qt.rgba(1, 1, 1, 0.08)))
+            : (input.activeFocus ? "#FFFFFF"
+                : (hover.hovered ? Qt.rgba(0, 0, 0, 0.08)
+                : Qt.rgba(0, 0, 0, 0.05))))
+    border.width: input.activeFocus ? 1.5 : 1
+    border.color: input.activeFocus
+        ? "#FA2D48"
+        : (Theme.darkMode ? Qt.rgba(1.0, 1.0, 1.0, 0.10) : Qt.rgba(0.0, 0.0, 0.0, 0.06))
 
     Behavior on color {
         ColorAnimation {
@@ -80,17 +100,16 @@ Rectangle {
         visible: input.activeFocus || hover.hovered
     }
 
-    Sym {
+    AppleIcon {
         id: glyph
 
         anchors.left: parent.left
-        anchors.leftMargin: Theme.spaced(16)
+        anchors.leftMargin: Theme.spaced(12)
         anchors.verticalCenter: parent.verticalCenter
         visible: root.icon.length > 0
-        width: visible ? glyph.iconSize : 0
-        text: root.icon
-        iconSize: Theme.font.larger
-        color: input.activeFocus ? Theme.colPrimary : Theme.colOnSurfaceVariant
+        name: root.icon
+        size: Theme.sized(16)
+        color: input.activeFocus ? "#FA2D48" : Theme.colOnSurfaceVariant
     }
 
     TextInput {
@@ -194,58 +213,87 @@ Rectangle {
         closePolicy: Popup.NoAutoClose
         visible: root.suggestionsEnabled && input.activeFocus && root.entries.length > 0
 
-        Repeater {
-            model: root.entries
+        Column {
+            width: panel.columnWidth
+            spacing: 0
 
-            delegate: RippleSurface {
-                id: entry
+            Item {
+                width: parent.width
+                height: Theme.sized(28)
+                visible: root.recalling
 
-                required property string modelData
-                required property int index
-
-                width: panel.columnWidth
-                implicitHeight: Theme.sized(44)
-                rounding: panel.rounding - panel.inset
-                colBackground: root.selectedEntry === entry.index
-                    ? Theme.colSecondaryContainer : "transparent"
-
-                Sym {
-                    id: cue
-
+                StyledText {
                     anchors.left: parent.left
                     anchors.leftMargin: Theme.spaced(14)
                     anchors.verticalCenter: parent.verticalCenter
-                    text: root.recalling ? "history" : "search"
-                    iconSize: Theme.font.normal
-                    color: Theme.colOnSurfaceVariant
+                    text: qsTr("RECENT SEARCHES")
+                    font.pixelSize: 10
+                    font.weight: Font.DemiBold
+                    font.letterSpacing: 0.6
+                    color: Theme.darkMode ? "#8E8E93" : "#86868B"
                 }
+            }
 
-                StyledText {
-                    anchors.left: cue.right
-                    anchors.leftMargin: Theme.spaced(12)
-                    anchors.right: forget.left
-                    anchors.rightMargin: Theme.spaced(8)
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: entry.modelData
-                    font.pixelSize: Theme.font.small
-                    elide: Text.ElideRight
+            Repeater {
+                model: root.entries
+
+                delegate: RippleSurface {
+                    id: entry
+
+                    required property string modelData
+                    required property int index
+
+                    readonly property bool isSelected: root.selectedEntry === entry.index
+
+                    width: parent.width
+                    implicitHeight: Theme.sized(42)
+                    rounding: Theme.sized(8)
+                    colBackground: entry.isSelected
+                        ? (Theme.darkMode ? Qt.rgba(250, 45, 72, 0.18) : Qt.rgba(250, 45, 72, 0.10))
+                        : "transparent"
+                    colState: entry.isSelected ? "#FA2D48" : Theme.colOnSurface
+
+                    AppleIcon {
+                        id: cue
+
+                        anchors.left: parent.left
+                        anchors.leftMargin: Theme.spaced(14)
+                        anchors.verticalCenter: parent.verticalCenter
+                        name: root.recalling ? "schedule" : "search"
+                        size: Theme.sized(16)
+                        color: entry.isSelected ? "#FA2D48" : (Theme.darkMode ? "#8E8E93" : "#86868B")
+                    }
+
+                    StyledText {
+                        anchors.left: cue.right
+                        anchors.leftMargin: Theme.spaced(12)
+                        anchors.right: forget.left
+                        anchors.rightMargin: Theme.spaced(8)
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: entry.modelData
+                        font.pixelSize: Theme.font.small
+                        font.weight: entry.isSelected ? Font.DemiBold : Font.Normal
+                        color: entry.isSelected ? (Theme.darkMode ? "#FFFFFF" : "#000000") : Theme.colOnSurface
+                        elide: Text.ElideRight
+                    }
+
+                    IconButton {
+                        id: forget
+
+                        anchors.right: parent.right
+                        anchors.rightMargin: Theme.spaced(8)
+                        anchors.verticalCenter: parent.verticalCenter
+                        visible: root.recalling
+                        icon: "close"
+                        Accessible.name: qsTr("Remove from search history")
+                        iconSize: Theme.sized(14)
+                        diameter: visible ? Theme.sized(28) : 0
+                        colIcon: Theme.colOnSurfaceVariant
+                        onClicked: SearchHistory.forget(entry.modelData)
+                    }
+
+                    onClicked: root.submit(entry.modelData)
                 }
-
-                IconButton {
-                    id: forget
-
-                    anchors.right: parent.right
-                    anchors.rightMargin: Theme.spaced(6)
-                    anchors.verticalCenter: parent.verticalCenter
-                    visible: root.recalling
-                    icon: "close"
-                    Accessible.name: qsTr("Remove from search history")
-                    iconSize: Theme.font.normal
-                    diameter: visible ? Theme.sized(32) : 0
-                    onClicked: SearchHistory.forget(entry.modelData)
-                }
-
-                onClicked: root.submit(entry.modelData)
             }
         }
     }

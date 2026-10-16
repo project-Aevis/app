@@ -40,13 +40,22 @@ Item {
         && root.page.filterable
     readonly property bool filtered: !!root.page && root.page.filter.length > 0
 
+    readonly property bool isSongsTab: (root.page && root.page.source && root.page.source.browseId === "FEmusic_liked_videos")
+        || (Browser.section === 2 && Browser.libraryTabs && Browser.libraryTab >= 0 && Browser.libraryTab < Browser.libraryTabs.length && Browser.libraryTabs[Browser.libraryTab].browseId === "FEmusic_liked_videos")
+    readonly property bool isAlbumsTab: (root.page && root.page.source && root.page.source.browseId === "FEmusic_liked_albums")
+        || (Browser.section === 2 && Browser.libraryTabs && Browser.libraryTab >= 0 && Browser.libraryTab < Browser.libraryTabs.length && Browser.libraryTabs[Browser.libraryTab].browseId === "FEmusic_liked_albums")
+    readonly property bool isArtistsTab: (root.page && root.page.source && root.page.source.browseId === "FEmusic_library_corpus_track_artists")
+        || (Browser.section === 2 && Browser.libraryTabs && Browser.libraryTab >= 0 && Browser.libraryTab < Browser.libraryTabs.length && Browser.libraryTabs[Browser.libraryTab].browseId === "FEmusic_library_corpus_track_artists")
+
     Column {
         id: libraryHeader
 
+        anchors.top: parent.top
+        anchors.topMargin: Theme.spaced(8)
         anchors.horizontalCenter: parent.horizontalCenter
         width: root.contentWidth - Theme.spacing.bleed * 2
         enabled: !root.modalActive
-        visible: root.libraryPage
+        visible: root.libraryPage && !root.isSongsTab && !root.isAlbumsTab && !root.isArtistsTab
         spacing: Theme.spaced(18)
 
         Item {
@@ -187,8 +196,8 @@ Item {
     ListView {
         id: list
 
-        anchors.top: root.libraryPage ? libraryHeader.bottom : parent.top
-        anchors.topMargin: root.libraryPage ? Theme.spaced(24) : 0
+        anchors.top: (root.libraryPage && libraryHeader.visible) ? libraryHeader.bottom : parent.top
+        anchors.topMargin: (root.libraryPage && libraryHeader.visible) ? Theme.spaced(24) : 0
         anchors.left: root.podcastSplit ? podcastColumn.right : parent.left
         anchors.leftMargin: root.podcastSplit ? Theme.spaced(28) - Theme.spacing.bleed : 0
         anchors.right: parent.right
@@ -365,7 +374,7 @@ Item {
                     id: trailing
 
                     width: parent.width
-                    height: root.selectMode ? Theme.sized(96) : Theme.spaced(20)
+                    height: root.selectMode ? Theme.sized(100) : Theme.sized(84)
                 }
             }
         }

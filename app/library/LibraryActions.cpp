@@ -9,7 +9,9 @@
 #include <QCoreApplication>
 #include <QQmlEngine>
 #include <QJsonArray>
+#include <QJsonDocument>
 #include <QJsonObject>
+#include <QSettings>
 
 #include <optional>
 
@@ -64,6 +66,7 @@ LibraryActions::LibraryActions(QObject *parent)
     : QObject(parent)
     , m_endpoints(innertube::Session::instance())
 {
+    loadPinnedPlaylists();
     connect(&auth::Account::instance(), &auth::Account::changed, this, [this] {
         const auto &account = auth::Account::instance();
         const QString identity = account.signedIn() ? account.channelId() : QString();
@@ -72,6 +75,7 @@ LibraryActions::LibraryActions(QObject *parent)
         m_accountId = identity;
         ++m_accountGeneration;
         forget();
+        loadPinnedPlaylists();
     });
 }
 
@@ -263,6 +267,7 @@ void LibraryActions::deletePlaylist(const QString &playlistId)
     const QJsonObject body {{QStringLiteral("playlistId"), withoutListPrefix(playlistId)}};
     send(QStringLiteral("playlist/delete"), body, tr("Could not delete that playlist."), {},
          [this, playlistId] {
+        unpinPlaylist(playlistId);
         Q_EMIT playlistDeleted(withoutListPrefix(playlistId));
         Q_EMIT feedback(tr("Playlist deleted"));
     });
@@ -541,6 +546,110 @@ void LibraryActions::setError(const QString &error)
         return;
     m_error = error;
     Q_EMIT errorChanged();
+}
+
+QString LibraryActions::pinnedPlaylistsSettingsKey() const
+{
+    return m_accountId.isEmpty()
+        ? QStringLiteral("sidebar/pinned_playlists")
+        : QStringLiteral("sidebar/pinned_playlists_") + m_accountId;
+}
+
+void LibraryActions::loadPinnedPlaylists()
+{
+    m_pinnedPlaylists.clear();
+    const QString key = pinnedPlaylistsSettingsKey();
+    const QString raw = QSettings().value(key).toString();
+    if (!raw.isEmpty()) {
+        const QJsonArray arr = QJsonDocument::fromJson(raw.toUtf8()).array();
+        for (const QJsonValue &val : arr) {
+            const QJsonObject obj = val.toObject();
+            PinnedPlaylist p;
+            p.playlistId = obj.value(QStringLiteral("playlistId")).toString();
+            p.title = obj.value(QStringLiteral("title")).toString();
+            p.artId = obj.value(QStringLiteral("artId")).toString();
+            if (!p.playlistId.isEmpty()) {
+                m_pinnedPlaylists.append(p);
+            }
+        }
+    }
+    Q_EMIT pinnedPlaylistsChanged();
+}
+
+void LibraryActions::savePinnedPlaylists()
+{
+    QJsonArray arr;
+    for (const auto &p : m_pinnedPlaylists) {
+        QJsonObject obj;
+        obj.insert(QStringLiteral("playlistId"), p.playlistId);
+        obj.insert(QStringLiteral("title"), p.title);
+        obj.insert(QStringLiteral("artId"), p.artId);
+        arr.append(obj);
+    }
+    const QString key = pinnedPlaylistsSettingsKey();
+    QSettings().setValue(key, QString::fromUtf8(QJsonDocument(arr).toJson(QJsonDocument::Compact)));
+    Q_EMIT pinnedPlaylistsChanged();
+}
+
+QVariantList LibraryActions::pinnedPlaylists() const
+{
+    QVariantList list;
+    list.reserve(m_pinnedPlaylists.size());
+    for (const auto &p : m_pinnedPlaylists) {
+        QVariantMap map;
+        map.insert(QStringLiteral("playlistId"), p.playlistId);
+        map.insert(QStringLiteral("title"), p.title);
+        map.insert(QStringLiteral("artId"), p.artId);
+        list.append(map);
+    }
+    return list;
+}
+
+bool LibraryActions::isPlaylistPinned(const QString &playlistId) const
+{
+    const QString norm = withoutListPrefix(playlistId);
+    if (norm.isEmpty())
+        return false;
+    for (const auto &p : m_pinnedPlaylists) {
+        if (withoutListPrefix(p.playlistId) == norm)
+            return true;
+    }
+    return false;
+}
+
+void LibraryActions::pinPlaylist(const QString &playlistId, const QString &title, const QString &artId)
+{
+    if (playlistId.isEmpty() || isPlaylistPinned(playlistId))
+        return;
+    PinnedPlaylist p;
+    p.playlistId = playlistId;
+    p.title = title.isEmpty() ? tr("Playlist") : title;
+    p.artId = artId;
+    m_pinnedPlaylists.append(p);
+    savePinnedPlaylists();
+    Q_EMIT feedback(tr("Pinned to sidebar"));
+}
+
+void LibraryActions::unpinPlaylist(const QString &playlistId)
+{
+    const QString norm = withoutListPrefix(playlistId);
+    if (norm.isEmpty())
+        return;
+    const int count = m_pinnedPlaylists.removeIf([&norm](const PinnedPlaylist &p) {
+        return withoutListPrefix(p.playlistId) == norm;
+    });
+    if (count > 0) {
+        savePinnedPlaylists();
+        Q_EMIT feedback(tr("Unpinned from sidebar"));
+    }
+}
+
+void LibraryActions::togglePinPlaylist(const QString &playlistId, const QString &title, const QString &artId)
+{
+    if (isPlaylistPinned(playlistId))
+        unpinPlaylist(playlistId);
+    else
+        pinPlaylist(playlistId, title, artId);
 }
 
 }

@@ -9,13 +9,27 @@ ModalSheet {
 
     readonly property var sections: [
         { "id": "appearance", "icon": "palette", "label": qsTr("Appearance") },
-        { "id": "playback", "icon": "play_circle", "label": qsTr("Playback") },
+        { "id": "playback", "icon": "play_arrow", "label": qsTr("Playback") },
         { "id": "sound", "icon": "graphic_eq", "label": qsTr("Sound") },
         { "id": "downloads", "icon": "download", "label": qsTr("Downloads") },
         { "id": "system", "icon": "desktop_windows", "label": qsTr("System") },
         { "id": "diagnostics", "icon": "bug_report", "label": qsTr("Diagnostics") },
         { "id": "about", "icon": "info", "label": qsTr("About") }
     ].filter(entry => entry.id !== "system" || SystemSettings.available)
+
+    function tileColor(id) {
+        switch (id) {
+        case "appearance": return "#5E5CE6";
+        case "playback":   return "#FA2D48";
+        case "sound":      return "#FF9F0A";
+        case "downloads":  return "#0A84FF";
+        case "system":     return "#8E8E93";
+        case "diagnostics":return "#30D158";
+        case "about":      return "#BF5AF2";
+        default:           return "#8E8E93";
+        }
+    }
+
     readonly property var swatches: [
         "#7C83FF", "#6750A4", "#3F7BE0", "#00A0A0",
         "#2E9E62", "#B58900", "#E0673F", "#D5407A"
@@ -70,13 +84,70 @@ ModalSheet {
         }
     }
 
+    // Apple-styled grouped inset card for settings
+    component SettingCard : Rectangle {
+        id: cardRoot
+
+        default property alias content: innerCol.data
+        property string sectionTitle: ""
+
+        width: parent.width
+        implicitHeight: (sectionTitle.length > 0 ? headerCol.implicitHeight + Theme.spaced(6) : 0) + cardRect.implicitHeight
+        color: "transparent"
+
+        Column {
+            id: headerCol
+            width: parent.width
+            visible: cardRoot.sectionTitle.length > 0
+
+            StyledText {
+                text: cardRoot.sectionTitle.toUpperCase()
+                font.pixelSize: 11
+                font.weight: Font.DemiBold
+                font.letterSpacing: 0.6
+                color: Theme.darkMode ? "#8E8E93" : "#86868B"
+                leftPadding: Theme.spaced(12)
+                bottomPadding: Theme.spaced(4)
+            }
+        }
+
+        Rectangle {
+            id: cardRect
+            anchors.top: headerCol.visible ? headerCol.bottom : parent.top
+            anchors.topMargin: headerCol.visible ? Theme.spaced(4) : 0
+            width: parent.width
+            implicitHeight: innerCol.implicitHeight + Theme.spaced(16)
+            radius: Theme.sized(12)
+            color: Theme.darkMode ? Qt.rgba(1, 1, 1, 0.04) : Qt.rgba(0, 0, 0, 0.03)
+            border.width: 1
+            border.color: Theme.darkMode ? Qt.rgba(1, 1, 1, 0.07) : Qt.rgba(0, 0, 0, 0.06)
+
+            Column {
+                id: innerCol
+                anchors.left: parent.left
+                anchors.leftMargin: Theme.spaced(16)
+                anchors.right: parent.right
+                anchors.rightMargin: Theme.spaced(16)
+                anchors.top: parent.top
+                anchors.topMargin: Theme.spaced(8)
+                spacing: Theme.spaced(4)
+            }
+        }
+    }
+
+    component SettingDivider : Rectangle {
+        width: parent.width
+        height: 1
+        color: Theme.darkMode ? Qt.rgba(1, 1, 1, 0.06) : Qt.rgba(0, 0, 0, 0.06)
+    }
+
     Column {
         id: rail
 
         anchors.top: parent.top
         anchors.left: parent.left
         anchors.leftMargin: Theme.spaced(14)
-        width: Theme.sized(208)
+        width: Theme.sized(212)
         spacing: Theme.spaced(4)
 
         Repeater {
@@ -92,30 +163,42 @@ ModalSheet {
 
                 objectName: tab.modelData.id
                 width: rail.width
-                implicitHeight: Theme.sized(46)
-                rounding: Theme.shape.navigation
-                colBackground: tab.selected ? Theme.colSecondaryContainer : "transparent"
-                colState: tab.selected ? Theme.colOnSecondaryContainer : Theme.colOnSurface
+                implicitHeight: Theme.sized(44)
+                rounding: Theme.sized(10)
+                colBackground: tab.selected ? (Theme.darkMode ? Qt.rgba(1, 1, 1, 0.12) : Qt.rgba(0, 0, 0, 0.08)) : "transparent"
+                colState: "#FA2D48"
 
-                Sym {
-                    id: tabGlyph
+                Rectangle {
+                    id: iconTile
 
                     anchors.left: parent.left
-                    anchors.leftMargin: Theme.spaced(18)
+                    anchors.leftMargin: Theme.spaced(10)
                     anchors.verticalCenter: parent.verticalCenter
-                    text: tab.modelData.icon
-                    iconSize: Theme.font.larger
-                    fill: tab.selected ? 1 : 0
-                    color: tab.selected ? Theme.colOnSecondaryContainer : Theme.colOnSurfaceVariant
+                    width: Theme.sized(28)
+                    height: Theme.sized(28)
+                    radius: Theme.sized(7)
+                    color: root.tileColor(tab.modelData.id)
+
+                    AppleIcon {
+                        anchors.centerIn: parent
+                        name: tab.modelData.icon
+                        size: Theme.sized(16)
+                        color: "#FFFFFF"
+                    }
                 }
 
                 StyledText {
-                    anchors.left: tabGlyph.right
-                    anchors.leftMargin: Theme.spaced(14)
+                    anchors.left: iconTile.right
+                    anchors.leftMargin: Theme.spaced(12)
+                    anchors.right: parent.right
+                    anchors.rightMargin: Theme.spaced(8)
                     anchors.verticalCenter: parent.verticalCenter
                     text: tab.modelData.label
                     title: tab.selected
-                    color: tab.selected ? Theme.colOnSecondaryContainer : Theme.colOnSurface
+                    font.weight: tab.selected ? Font.DemiBold : Font.Normal
+                    font.pixelSize: Theme.font.normal
+                    color: tab.selected ? (Theme.darkMode ? "#FFFFFF" : "#000000") : Theme.colOnSurface
+                    elide: Text.ElideRight
                 }
 
                 onClicked: root.section = tab.modelData.id
@@ -162,283 +245,307 @@ ModalSheet {
                 width: parent.width
                 visible: root.section === "appearance"
                 height: visible ? implicitHeight : 0
-                spacing: Theme.spaced(4)
+                spacing: Theme.spaced(16)
 
-                SettingRow {
-                    width: parent.width
-                    title: qsTr("Language")
-                    caption: qsTr("Also what YouTube Music answers this client in")
-                    controlWidth: Theme.sized(246)
+                SettingCard {
+                    sectionTitle: qsTr("Theme & Language")
 
-                    SelectField {
-                        width: Theme.sized(246)
-                        height: Theme.sized(42)
-                        options: Localization.options
-                        value: Localization.language
-                        onPicked: chosen => Localization.language = chosen
-                    }
-                }
-
-                SettingRow {
-                    width: parent.width
-                    title: qsTr("Theme")
-                    caption: ThemeLibrary.caption
-                    controlWidth: Theme.sized(246)
-
-                    SelectField {
-                        width: Theme.sized(246)
-                        height: Theme.sized(42)
-                        options: ThemeLibrary.options
-                        value: ThemeLibrary.current
-                        onPicked: chosen => ThemeLibrary.select(chosen)
-                    }
-                }
-
-                Item {
-                    width: parent.width
-                    height: ThemeLibrary.problems.length > 0 ? problems.implicitHeight + Theme.spaced(12) : 0
-                    clip: true
-
-                    NoticeCard {
-                        id: problems
-
+                    SettingRow {
                         width: parent.width
-                        icon: "error"
-                        colAccent: Theme.colError
-                        title: qsTr("%n problem(s) in %1", "", ThemeLibrary.problems.length)
-                            .arg(ThemeLibrary.name)
-                        caption: ThemeLibrary.problems.join("\n")
-                    }
+                        title: qsTr("Language")
+                        caption: qsTr("Also what YouTube Music answers this client in")
+                        controlWidth: Theme.sized(246)
 
-                    Behavior on height {
-                        NumberAnimation {
-                            duration: Theme.duration.resize
-                            easing.type: Easing.BezierSpline
-                            easing.bezierCurve: Theme.curve.emphasized
+                        SelectField {
+                            width: Theme.sized(246)
+                            height: Theme.sized(42)
+                            options: Localization.options
+                            value: Localization.language
+                            onPicked: chosen => Localization.language = chosen
                         }
                     }
-                }
 
-                SettingRow {
-                    width: parent.width
-                    title: qsTr("Your themes")
-                    caption: qsTr("Each theme is a folder with a theme.json file. A saved change shows up straight away.")
-                    controlWidth: folderButton.implicitWidth
+                    SettingDivider {}
 
-                    PillButton {
-                        id: folderButton
-
-                        text: qsTr("Open folder")
-                        icon: "folder_open"
-                        onClicked: ThemeLibrary.openFolder()
-                    }
-                }
-
-                SettingRow {
-                    width: parent.width
-                    title: qsTr("Mode")
-                    caption: qsTr("System follows what this desktop asks for, light or dark")
-                    controlWidth: Theme.sized(246)
-
-                    SegmentedTabs {
-                        width: Theme.sized(246)
-                        labels: [qsTr("System"), qsTr("Light"), qsTr("Dark")]
-                        current: Appearance.mode
-                        onCurrentChanged: Appearance.mode = current
-                    }
-                }
-
-                SettingRow {
-                    width: parent.width
-                    visible: WindowChrome.selectable
-                    title: qsTr("Window decorations")
-                    caption: qsTr("Draw the title bar here, or leave it to the desktop")
-                    controlWidth: Theme.sized(246)
-
-                    SegmentedTabs {
-                        width: Theme.sized(246)
-                        labels: [qsTr("HyperTube"), qsTr("System", "window decorations")]
-                        current: WindowChrome.decorations
-                        onCurrentChanged: WindowChrome.decorations = current
-                    }
-                }
-
-                Item {
-                    width: parent.width
-                    height: WindowChrome.restartPending ? restart.implicitHeight + Theme.spaced(12) : 0
-                    clip: true
-
-                    NoticeCard {
-                        id: restart
-
+                    SettingRow {
                         width: parent.width
-                        icon: "restart_alt"
-                        colAccent: Theme.colTertiary
-                        title: qsTr("The window frame changes on the next start")
-                        caption: qsTr("A window keeps the frame it was created with, so HyperTube Music has to start again to draw the other one.")
+                        title: qsTr("Theme")
+                        caption: ThemeLibrary.caption
+                        controlWidth: Theme.sized(246)
 
-                        PillButton {
-                            text: qsTr("Restart now")
-                            toggled: true
-                            onClicked: WindowChrome.relaunch()
+                        SelectField {
+                            width: Theme.sized(246)
+                            height: Theme.sized(42)
+                            options: ThemeLibrary.options
+                            value: ThemeLibrary.current
+                            onPicked: chosen => ThemeLibrary.select(chosen)
                         }
                     }
-
-                    Behavior on height {
-                        NumberAnimation {
-                            duration: Theme.duration.resize
-                            easing.type: Easing.BezierSpline
-                            easing.bezierCurve: Theme.curve.emphasized
-                        }
-                    }
-                }
-
-                SettingRow {
-                    width: parent.width
-                    visible: Appearance.systemColorAvailable
-                    title: qsTr("Follow the system color")
-                    caption: qsTr("Take the accent from the palette this desktop generates")
-                    controlWidth: Theme.sized(52)
-
-                    ToggleSwitch {
-                        checked: Appearance.followsSystemColor
-                        onToggled: value => {
-                            if (value)
-                                Appearance.followSystemColor();
-                            else
-                                Appearance.seed = picker.value;
-                        }
-                    }
-                }
-
-                Item {
-                    id: colorPanels
-
-                    property real transition: Appearance.followsSystemColor ? 0 : 1
-
-                    readonly property bool pinnedNotice: !Appearance.systemColorAvailable
-                    readonly property real noticeReveal: colorPanels.pinnedNotice
-                        ? 1 : 1 - colorPanels.transition
-                    readonly property real pickerReveal: colorPanels.transition
-
-                    width: parent.width
-                    height: noticePane.height + pickerPane.height
 
                     Item {
-                        id: noticePane
-
                         width: parent.width
-                        height: colorPanels.noticeReveal * (notice.implicitHeight + Theme.spaced(16))
-                        opacity: colorPanels.noticeReveal
+                        height: ThemeLibrary.problems.length > 0 ? problems.implicitHeight + Theme.spaced(12) : 0
                         clip: true
 
                         NoticeCard {
-                            id: notice
+                            id: problems
 
                             width: parent.width
-                            icon: "palette"
-                            title: SystemTheme.available
-                                ? qsTr("Colors come from %1").arg(SystemTheme.sourceName)
-                                : qsTr("No system color source was found")
-                            caption: root.colorSourceCaption
+                            icon: "error"
+                            colAccent: Theme.colError
+                            title: qsTr("%n problem(s) in %1", "", ThemeLibrary.problems.length)
+                                .arg(ThemeLibrary.name)
+                            caption: ThemeLibrary.problems.join("\n")
+                        }
 
-                            Repeater {
-                                model: SystemTheme.sources
-
-                                delegate: ColorSourceRow {
-                                    width: parent.width
-                                }
+                        Behavior on height {
+                            NumberAnimation {
+                                duration: Theme.duration.resize
+                                easing.type: Easing.BezierSpline
+                                easing.bezierCurve: Theme.curve.emphasized
                             }
+                        }
+                    }
+
+                    SettingDivider {}
+
+                    SettingRow {
+                        width: parent.width
+                        title: qsTr("Your themes")
+                        caption: qsTr("Each theme is a folder with a theme.json file. A saved change shows up straight away.")
+                        controlWidth: folderButton.implicitWidth
+
+                        PillButton {
+                            id: folderButton
+
+                            text: qsTr("Open folder")
+                            icon: "folder_open"
+                            onClicked: ThemeLibrary.openFolder()
+                        }
+                    }
+                }
+
+                SettingCard {
+                    sectionTitle: qsTr("Window & Appearance Mode")
+
+                    SettingRow {
+                        width: parent.width
+                        title: qsTr("Mode")
+                        caption: qsTr("System follows what this desktop asks for, light or dark")
+                        controlWidth: Theme.sized(246)
+
+                        SegmentedTabs {
+                            width: Theme.sized(246)
+                            labels: [qsTr("System"), qsTr("Light"), qsTr("Dark")]
+                            current: Appearance.mode
+                            onCurrentChanged: Appearance.mode = current
+                        }
+                    }
+
+                    SettingDivider {
+                        visible: WindowChrome.selectable
+                    }
+
+                    SettingRow {
+                        width: parent.width
+                        visible: WindowChrome.selectable
+                        title: qsTr("Window decorations")
+                        caption: qsTr("Draw the title bar here, or leave it to the desktop")
+                        controlWidth: Theme.sized(246)
+
+                        SegmentedTabs {
+                            width: Theme.sized(246)
+                            labels: [qsTr("HyperTube"), qsTr("System", "window decorations")]
+                            current: WindowChrome.decorations
+                            onCurrentChanged: WindowChrome.decorations = current
                         }
                     }
 
                     Item {
-                        id: pickerPane
-
-                        y: noticePane.height
                         width: parent.width
-                        height: colorPanels.pickerReveal * (custom.implicitHeight + Theme.spaced(8))
-                        opacity: colorPanels.pickerReveal
+                        height: WindowChrome.restartPending ? restart.implicitHeight + Theme.spaced(12) : 0
                         clip: true
 
-                        Column {
-                            id: custom
-
-                            readonly property real swatchSize: Theme.sized(40)
-                            readonly property real swatchSpacing: Theme.spaced(9)
-                            readonly property real paletteWidth: Math.min(custom.width,
-                                root.swatches.length * custom.swatchSize
-                                    + (root.swatches.length - 1) * custom.swatchSpacing)
+                        NoticeCard {
+                            id: restart
 
                             width: parent.width
-                            spacing: Theme.spaced(12)
+                            icon: "restart_alt"
+                            colAccent: Theme.colTertiary
+                            title: qsTr("The window frame changes on the next start")
+                            caption: qsTr("A window keeps the frame it was created with, so HyperTube Music has to start again to draw the other one.")
 
-                            SettingRow {
-                                width: parent.width
-                                title: qsTr("Accent color")
-                                caption: qsTr("Every other color in the interface is generated from this one")
+                            PillButton {
+                                text: qsTr("Restart now")
+                                toggled: true
+                                onClicked: WindowChrome.relaunch()
                             }
+                        }
 
-                            Flow {
-                                width: custom.paletteWidth
-                                spacing: custom.swatchSpacing
-
-                                Repeater {
-                                    model: root.swatches
-
-                                    delegate: RippleSurface {
-                                        id: swatch
-
-                                        required property string modelData
-
-                                        readonly property bool selected: !Appearance.followsSystemColor
-                                            && Qt.colorEqual(swatch.modelData, Appearance.seed)
-
-                                        implicitWidth: custom.swatchSize
-                                        implicitHeight: custom.swatchSize
-                                        rounding: Theme.shape.swatch
-                                        colBackground: swatch.modelData
-                                        colState: "#ffffff"
-
-                                        Rectangle {
-                                            anchors.centerIn: parent
-                                            width: Theme.sized(18)
-                                            height: Theme.sized(18)
-                                            radius: Theme.shape.swatch
-                                            visible: swatch.selected
-                                            color: Theme.colLayer1
-
-                                            Sym {
-                                                anchors.centerIn: parent
-                                                text: "check"
-                                                iconSize: Theme.sized(14)
-                                                color: Theme.colOnSurface
-                                            }
-                                        }
-
-                                        onClicked: {
-                                            picker.clearFocus();
-                                            picker.adopt(swatch.modelData);
-                                            Appearance.seed = swatch.modelData;
-                                        }
-                                    }
-                                }
+                        Behavior on height {
+                            NumberAnimation {
+                                duration: Theme.duration.resize
+                                easing.type: Easing.BezierSpline
+                                easing.bezierCurve: Theme.curve.emphasized
                             }
+                        }
+                    }
+                }
 
-                            ColorPicker {
-                                id: picker
+                SettingCard {
+                    sectionTitle: qsTr("Accent Color")
 
-                                width: custom.paletteWidth
-                                onPicked: chosen => Appearance.seed = chosen
+                    SettingRow {
+                        width: parent.width
+                        visible: Appearance.systemColorAvailable
+                        title: qsTr("Follow the system color")
+                        caption: qsTr("Take the accent from the palette this desktop generates")
+                        controlWidth: Theme.sized(52)
+
+                        ToggleSwitch {
+                            checked: Appearance.followsSystemColor
+                            onToggled: value => {
+                                if (value)
+                                    Appearance.followSystemColor();
+                                else
+                                    Appearance.seed = picker.value;
                             }
                         }
                     }
 
-                    Behavior on transition {
-                        NumberAnimation {
-                            duration: Theme.duration.resize
-                            easing.type: Easing.BezierSpline
-                            easing.bezierCurve: Theme.curve.emphasized
+                    SettingDivider {
+                        visible: Appearance.systemColorAvailable
+                    }
+
+                    Item {
+                        id: colorPanels
+
+                        property real transition: Appearance.followsSystemColor ? 0 : 1
+
+                        readonly property bool pinnedNotice: !Appearance.systemColorAvailable
+                        readonly property real noticeReveal: colorPanels.pinnedNotice
+                            ? 1 : 1 - colorPanels.transition
+                        readonly property real pickerReveal: colorPanels.transition
+
+                        width: parent.width
+                        height: noticePane.height + pickerPane.height
+
+                        Item {
+                            id: noticePane
+
+                            width: parent.width
+                            height: colorPanels.noticeReveal * (notice.implicitHeight + Theme.spaced(16))
+                            opacity: colorPanels.noticeReveal
+                            clip: true
+
+                            NoticeCard {
+                                id: notice
+
+                                width: parent.width
+                                icon: "palette"
+                                title: SystemTheme.available
+                                    ? qsTr("Colors come from %1").arg(SystemTheme.sourceName)
+                                    : qsTr("No system color source was found")
+                                caption: root.colorSourceCaption
+
+                                Repeater {
+                                    model: SystemTheme.sources
+
+                                    delegate: ColorSourceRow {
+                                        width: parent.width
+                                    }
+                                }
+                            }
+                        }
+
+                        Item {
+                            id: pickerPane
+
+                            y: noticePane.height
+                            width: parent.width
+                            height: colorPanels.pickerReveal * (custom.implicitHeight + Theme.spaced(8))
+                            opacity: colorPanels.pickerReveal
+                            clip: true
+
+                            Column {
+                                id: custom
+
+                                readonly property real swatchSize: Theme.sized(40)
+                                readonly property real swatchSpacing: Theme.spaced(9)
+                                readonly property real paletteWidth: Math.min(custom.width,
+                                    root.swatches.length * custom.swatchSize
+                                        + (root.swatches.length - 1) * custom.swatchSpacing)
+
+                                width: parent.width
+                                spacing: Theme.spaced(12)
+
+                                SettingRow {
+                                    width: parent.width
+                                    title: qsTr("Accent color")
+                                    caption: qsTr("Every other color in the interface is generated from this one")
+                                }
+
+                                Flow {
+                                    width: custom.paletteWidth
+                                    spacing: custom.swatchSpacing
+
+                                    Repeater {
+                                        model: root.swatches
+
+                                        delegate: RippleSurface {
+                                            id: swatch
+
+                                            required property string modelData
+
+                                            readonly property bool selected: !Appearance.followsSystemColor
+                                                && Qt.colorEqual(swatch.modelData, Appearance.seed)
+
+                                            implicitWidth: custom.swatchSize
+                                            implicitHeight: custom.swatchSize
+                                            rounding: Theme.shape.swatch
+                                            colBackground: swatch.modelData
+                                            colState: "#ffffff"
+
+                                            Rectangle {
+                                                anchors.centerIn: parent
+                                                width: Theme.sized(18)
+                                                height: Theme.sized(18)
+                                                radius: Theme.shape.swatch
+                                                visible: swatch.selected
+                                                color: Theme.colLayer1
+
+                                                Sym {
+                                                    anchors.centerIn: parent
+                                                    text: "check"
+                                                    iconSize: Theme.sized(14)
+                                                    color: Theme.colOnSurface
+                                                }
+                                            }
+
+                                            onClicked: {
+                                                picker.clearFocus();
+                                                picker.adopt(swatch.modelData);
+                                                Appearance.seed = swatch.modelData;
+                                            }
+                                        }
+                                    }
+                                }
+
+                                ColorPicker {
+                                    id: picker
+
+                                    width: custom.paletteWidth
+                                    onPicked: chosen => Appearance.seed = chosen
+                                }
+                            }
+                        }
+
+                        Behavior on transition {
+                            NumberAnimation {
+                                duration: Theme.duration.resize
+                                easing.type: Easing.BezierSpline
+                                easing.bezierCurve: Theme.curve.emphasized
+                            }
                         }
                     }
                 }
@@ -450,150 +557,168 @@ ModalSheet {
                 width: parent.width
                 visible: root.section === "playback"
                 height: visible ? implicitHeight : 0
-                spacing: Theme.spaced(4)
+                spacing: Theme.spaced(16)
 
-                SettingRow {
-                    width: parent.width
-                    title: qsTr("Autoplay")
-                    caption: qsTr("Keep playing similar music when the queue runs out")
-                    controlWidth: Theme.sized(52)
+                SettingCard {
+                    sectionTitle: qsTr("Playback Options")
 
-                    ToggleSwitch {
-                        checked: PlaybackSettings.autoplay
-                        onToggled: value => PlaybackSettings.autoplay = value
+                    SettingRow {
+                        width: parent.width
+                        title: qsTr("Autoplay")
+                        caption: qsTr("Keep playing similar music when the queue runs out")
+                        controlWidth: Theme.sized(52)
+
+                        ToggleSwitch {
+                            checked: PlaybackSettings.autoplay
+                            onToggled: value => PlaybackSettings.autoplay = value
+                        }
                     }
-                }
 
-                SettingRow {
-                    width: parent.width
-                    title: qsTr("Skip tracks that fail to play")
-                    caption: qsTr("Move on to the next track instead of stopping when one fails")
-                    controlWidth: Theme.sized(52)
+                    SettingDivider {}
 
-                    ToggleSwitch {
-                        checked: PlaybackSettings.skipFailedTracks
-                        onToggled: value => PlaybackSettings.skipFailedTracks = value
+                    SettingRow {
+                        width: parent.width
+                        title: qsTr("Skip tracks that fail to play")
+                        caption: qsTr("Move on to the next track instead of stopping when one fails")
+                        controlWidth: Theme.sized(52)
+
+                        ToggleSwitch {
+                            checked: PlaybackSettings.skipFailedTracks
+                            onToggled: value => PlaybackSettings.skipFailedTracks = value
+                        }
                     }
-                }
 
-                SettingRow {
-                    width: parent.width
-                    title: qsTr("Play videos by default")
-                    caption: qsTr("Open the music video instead of the artwork when a track has one")
-                    controlWidth: Theme.sized(52)
+                    SettingDivider {}
 
-                    ToggleSwitch {
-                        checked: PlaybackSettings.playVideos
-                        onToggled: value => PlaybackSettings.playVideos = value
+                    SettingRow {
+                        width: parent.width
+                        title: qsTr("Play videos by default")
+                        caption: qsTr("Open the music video instead of the artwork when a track has one")
+                        controlWidth: Theme.sized(52)
+
+                        ToggleSwitch {
+                            checked: PlaybackSettings.playVideos
+                            onToggled: value => PlaybackSettings.playVideos = value
+                        }
                     }
-                }
 
-                SettingRow {
-                    width: parent.width
-                    title: qsTr("Normalize loudness")
-                    caption: qsTr("Even out the volume difference between tracks")
-                    controlWidth: Theme.sized(52)
+                    SettingDivider {}
 
-                    ToggleSwitch {
-                        checked: PlaybackSettings.normalizeLoudness
-                        onToggled: value => PlaybackSettings.normalizeLoudness = value
-                    }
-                }
+                    SettingRow {
+                        width: parent.width
+                        title: qsTr("Normalize loudness")
+                        caption: qsTr("Even out the volume difference between tracks")
+                        controlWidth: Theme.sized(52)
 
-                SettingRow {
-                    width: parent.width
-                    title: qsTr("Transitions")
-                    caption: root.transitionCaption
-                    controlWidth: Theme.sized(246)
-
-                    SegmentedTabs {
-                        id: modes
-
-                        width: Theme.sized(246)
-                        labels: [qsTr("Off"), qsTr("Crossfade", "transition mode"), qsTr("Smart")]
-                        current: PlaybackSettings.transitionMode
-                        onCurrentChanged: {
-                            PlaybackSettings.transitionMode = modes.current;
-                            modes.current = Qt.binding(() => PlaybackSettings.transitionMode);
+                        ToggleSwitch {
+                            checked: PlaybackSettings.normalizeLoudness
+                            onToggled: value => PlaybackSettings.normalizeLoudness = value
                         }
                     }
                 }
 
-                Item {
-                    id: transitionPanels
+                SettingCard {
+                    sectionTitle: qsTr("Transitions & Audio")
 
-                    property real lengthReveal:
-                        PlaybackSettings.transitionMode === PlaybackSettings.TransitionsOff ? 0 : 1
-                    property real tempoReveal:
-                        PlaybackSettings.transitionMode === PlaybackSettings.Smart ? 1 : 0
-
-                    width: parent.width
-                    height: lengthPane.height + tempoPane.height
-
-                    Item {
-                        id: lengthPane
-
+                    SettingRow {
                         width: parent.width
-                        height: transitionPanels.lengthReveal * (lengthRow.implicitHeight + Theme.spaced(4))
-                        opacity: transitionPanels.lengthReveal
-                        clip: true
+                        title: qsTr("Transitions")
+                        caption: root.transitionCaption
+                        controlWidth: Theme.sized(246)
 
-                        SettingRow {
-                            id: lengthRow
+                        SegmentedTabs {
+                            id: modes
 
-                            width: parent.width
-                            title: root.transitionLengthTitle
-                            caption: root.transitionLengthCaption
-                            controlWidth: Theme.sized(220)
-
-                            SeekBar {
-                                width: Theme.sized(220)
-                                continuous: true
-                                position: PlaybackSettings.crossfadeSeconds
-                                duration: PlaybackSettings.maximumCrossfadeSeconds
-                                onSeeked: seconds => PlaybackSettings.crossfadeSeconds = Math.round(seconds)
+                            width: Theme.sized(246)
+                            labels: [qsTr("Off"), qsTr("Crossfade", "transition mode"), qsTr("Smart")]
+                            current: PlaybackSettings.transitionMode
+                            onCurrentChanged: {
+                                PlaybackSettings.transitionMode = modes.current;
+                                modes.current = Qt.binding(() => PlaybackSettings.transitionMode);
                             }
                         }
                     }
 
+                    SettingDivider {
+                        visible: PlaybackSettings.transitionMode !== PlaybackSettings.TransitionsOff
+                    }
+
                     Item {
-                        id: tempoPane
+                        id: transitionPanels
 
-                        y: lengthPane.height
+                        property real lengthReveal:
+                            PlaybackSettings.transitionMode === PlaybackSettings.TransitionsOff ? 0 : 1
+                        property real tempoReveal:
+                            PlaybackSettings.transitionMode === PlaybackSettings.Smart ? 1 : 0
+
                         width: parent.width
-                        height: transitionPanels.tempoReveal * (tempoRow.implicitHeight + Theme.spaced(4))
-                        opacity: transitionPanels.tempoReveal
-                        clip: true
+                        height: lengthPane.height + tempoPane.height
 
-                        SettingRow {
-                            id: tempoRow
+                        Item {
+                            id: lengthPane
 
                             width: parent.width
-                            title: qsTr("Match tempo")
-                            caption: qsTr("Stretch the incoming track so both beat grids run together")
-                            controlWidth: Theme.sized(52)
+                            height: transitionPanels.lengthReveal * (lengthRow.implicitHeight + Theme.spaced(4))
+                            opacity: transitionPanels.lengthReveal
+                            clip: true
 
-                            ToggleSwitch {
-                                checked: PlaybackSettings.matchTempo
-                                Accessible.name: qsTr("Match the tempo of the incoming track")
-                                onToggled: value => PlaybackSettings.matchTempo = value
+                            SettingRow {
+                                id: lengthRow
+
+                                width: parent.width
+                                title: root.transitionLengthTitle
+                                caption: root.transitionLengthCaption
+                                controlWidth: Theme.sized(220)
+
+                                SeekBar {
+                                    width: Theme.sized(220)
+                                    continuous: true
+                                    position: PlaybackSettings.crossfadeSeconds
+                                    duration: PlaybackSettings.maximumCrossfadeSeconds
+                                    onSeeked: seconds => PlaybackSettings.crossfadeSeconds = Math.round(seconds)
+                                }
                             }
                         }
-                    }
 
-                    Behavior on lengthReveal {
-                        NumberAnimation {
-                            duration: Theme.duration.resize
-                            easing.type: Easing.BezierSpline
-                            easing.bezierCurve: Theme.curve.emphasized
+                        Item {
+                            id: tempoPane
+
+                            y: lengthPane.height
+                            width: parent.width
+                            height: transitionPanels.tempoReveal * (tempoRow.implicitHeight + Theme.spaced(4))
+                            opacity: transitionPanels.tempoReveal
+                            clip: true
+
+                            SettingRow {
+                                id: tempoRow
+
+                                width: parent.width
+                                title: qsTr("Match tempo")
+                                caption: qsTr("Stretch the incoming track so both beat grids run together")
+                                controlWidth: Theme.sized(52)
+
+                                ToggleSwitch {
+                                    checked: PlaybackSettings.matchTempo
+                                    Accessible.name: qsTr("Match the tempo of the incoming track")
+                                    onToggled: value => PlaybackSettings.matchTempo = value
+                                }
+                            }
                         }
-                    }
 
-                    Behavior on tempoReveal {
-                        NumberAnimation {
-                            duration: Theme.duration.resize
-                            easing.type: Easing.BezierSpline
-                            easing.bezierCurve: Theme.curve.emphasized
+                        Behavior on lengthReveal {
+                            NumberAnimation {
+                                duration: Theme.duration.resize
+                                easing.type: Easing.BezierSpline
+                                easing.bezierCurve: Theme.curve.emphasized
+                            }
+                        }
+
+                        Behavior on tempoReveal {
+                            NumberAnimation {
+                                duration: Theme.duration.resize
+                                easing.type: Easing.BezierSpline
+                                easing.bezierCurve: Theme.curve.emphasized
+                            }
                         }
                     }
                 }
@@ -605,80 +730,88 @@ ModalSheet {
                 width: parent.width
                 visible: root.section === "sound"
                 height: visible ? implicitHeight : 0
-                spacing: Theme.spaced(4)
+                spacing: Theme.spaced(16)
 
-                SettingRow {
-                    width: parent.width
-                    title: qsTr("Equalizer")
-                    caption: qsTr("A ten band graphic equalizer on the playback filter chain")
-                    controlWidth: Theme.sized(52)
+                SettingCard {
+                    sectionTitle: qsTr("Equalizer")
 
-                    ToggleSwitch {
-                        checked: PlaybackSettings.equalizerEnabled
-                        onToggled: value => PlaybackSettings.equalizerEnabled = value
-                    }
-                }
+                    SettingRow {
+                        width: parent.width
+                        title: qsTr("Equalizer")
+                        caption: qsTr("A ten band graphic equalizer on the playback filter chain")
+                        controlWidth: Theme.sized(52)
 
-                Item {
-                    width: parent.width
-                    height: equalizer.implicitHeight + Theme.spaced(16)
-                    opacity: PlaybackSettings.equalizerEnabled ? 1 : 0.35
-                    enabled: PlaybackSettings.equalizerEnabled
-
-                    Behavior on opacity {
-                        NumberAnimation {
-                            duration: Theme.duration.fast
-                            easing.type: Easing.BezierSpline
-                            easing.bezierCurve: Theme.curve.expressiveEffects
+                        ToggleSwitch {
+                            checked: PlaybackSettings.equalizerEnabled
+                            onToggled: value => PlaybackSettings.equalizerEnabled = value
                         }
                     }
 
-                    Column {
-                        id: equalizer
+                    SettingDivider {
+                        visible: PlaybackSettings.equalizerEnabled
+                    }
 
+                    Item {
                         width: parent.width
-                        spacing: Theme.spaced(16)
+                        height: equalizer.implicitHeight + Theme.spaced(16)
+                        opacity: PlaybackSettings.equalizerEnabled ? 1 : 0.35
+                        enabled: PlaybackSettings.equalizerEnabled
 
-                        Grid {
-                            id: presets
-
-                            width: parent.width
-                            columns: 3
-                            spacing: Theme.spaced(8)
-
-                            Repeater {
-                                model: PlaybackSettings.presets
-
-                                delegate: PillButton {
-                                    required property string modelData
-                                    required property int index
-
-                                    width: (presets.width - presets.spacing * (presets.columns - 1))
-                                        / presets.columns
-                                    text: modelData
-                                    toggled: PlaybackSettings.preset === index
-                                    onClicked: PlaybackSettings.preset = index
-                                }
+                        Behavior on opacity {
+                            NumberAnimation {
+                                duration: Theme.duration.fast
+                                easing.type: Easing.BezierSpline
+                                easing.bezierCurve: Theme.curve.expressiveEffects
                             }
                         }
 
-                        Row {
+                        Column {
+                            id: equalizer
+
                             width: parent.width
-                            height: Theme.sized(190)
+                            spacing: Theme.spaced(16)
 
-                            Repeater {
-                                model: PlaybackSettings.bands
+                            Grid {
+                                id: presets
 
-                                delegate: BandSlider {
-                                    required property string modelData
-                                    required property int index
+                                width: parent.width
+                                columns: 3
+                                spacing: Theme.spaced(8)
 
-                                    width: parent.width / PlaybackSettings.bands.length
-                                    height: parent.height
-                                    label: modelData
-                                    range: PlaybackSettings.gainRange
-                                    value: PlaybackSettings.gains[index]
-                                    onMoved: level => PlaybackSettings.setGain(index, level)
+                                Repeater {
+                                    model: PlaybackSettings.presets
+
+                                    delegate: PillButton {
+                                        required property string modelData
+                                        required property int index
+
+                                        width: (presets.width - presets.spacing * (presets.columns - 1))
+                                            / presets.columns
+                                        text: modelData
+                                        toggled: PlaybackSettings.preset === index
+                                        onClicked: PlaybackSettings.preset = index
+                                    }
+                                }
+                            }
+
+                            Row {
+                                width: parent.width
+                                height: Theme.sized(190)
+
+                                Repeater {
+                                    model: PlaybackSettings.bands
+
+                                    delegate: BandSlider {
+                                        required property string modelData
+                                        required property int index
+
+                                        width: parent.width / PlaybackSettings.bands.length
+                                        height: parent.height
+                                        label: modelData
+                                        range: PlaybackSettings.gainRange
+                                        value: PlaybackSettings.gains[index]
+                                        onMoved: level => PlaybackSettings.setGain(index, level)
+                                    }
                                 }
                             }
                         }
@@ -686,12 +819,21 @@ ModalSheet {
                 }
             }
 
-            DownloadSettings {
+            Column {
                 id: downloads
 
                 width: parent.width
                 visible: root.section === "downloads"
                 height: visible ? implicitHeight : 0
+                spacing: Theme.spaced(16)
+
+                SettingCard {
+                    sectionTitle: qsTr("Downloads & Storage")
+
+                    DownloadSettings {
+                        width: parent.width
+                    }
+                }
             }
 
             Column {
@@ -700,34 +842,42 @@ ModalSheet {
                 width: parent.width
                 visible: root.section === "system"
                 height: visible ? implicitHeight : 0
-                spacing: Theme.spaced(4)
+                spacing: Theme.spaced(16)
 
-                SettingRow {
-                    width: parent.width
-                    visible: SystemSettings.background !== SystemSettings.Unavailable
-                    title: SystemSettings.background === SystemSettings.Dock
-                        ? qsTr("Keep running in the Dock") : qsTr("Keep running in the tray")
-                    caption: SystemSettings.background === SystemSettings.Dock
-                        ? qsTr("Closing the window leaves %1 playing in the Dock").arg(AppInfo.name)
-                        : qsTr("Closing the window leaves %1 playing in the notification area").arg(AppInfo.name)
-                    controlWidth: Theme.sized(52)
+                SettingCard {
+                    sectionTitle: qsTr("System Integration")
 
-                    ToggleSwitch {
-                        checked: SystemSettings.closeToTray
-                        onToggled: value => SystemSettings.closeToTray = value
+                    SettingRow {
+                        width: parent.width
+                        visible: SystemSettings.background !== SystemSettings.Unavailable
+                        title: SystemSettings.background === SystemSettings.Dock
+                            ? qsTr("Keep running in the Dock") : qsTr("Keep running in the tray")
+                        caption: SystemSettings.background === SystemSettings.Dock
+                            ? qsTr("Closing the window leaves %1 playing in the Dock").arg(AppInfo.name)
+                            : qsTr("Closing the window leaves %1 playing in the notification area").arg(AppInfo.name)
+                        controlWidth: Theme.sized(52)
+
+                        ToggleSwitch {
+                            checked: SystemSettings.closeToTray
+                            onToggled: value => SystemSettings.closeToTray = value
+                        }
                     }
-                }
 
-                SettingRow {
-                    width: parent.width
-                    visible: SystemSettings.startupAvailable
-                    title: qsTr("Launch on system startup")
-                    caption: qsTr("Start %1 when you sign in to Windows").arg(AppInfo.name)
-                    controlWidth: Theme.sized(52)
+                    SettingDivider {
+                        visible: SystemSettings.background !== SystemSettings.Unavailable && SystemSettings.startupAvailable
+                    }
 
-                    ToggleSwitch {
-                        checked: SystemSettings.launchAtSignIn
-                        onToggled: value => SystemSettings.launchAtSignIn = value
+                    SettingRow {
+                        width: parent.width
+                        visible: SystemSettings.startupAvailable
+                        title: qsTr("Launch on system startup")
+                        caption: qsTr("Start %1 when you sign in to Windows").arg(AppInfo.name)
+                        controlWidth: Theme.sized(52)
+
+                        ToggleSwitch {
+                            checked: SystemSettings.launchAtSignIn
+                            onToggled: value => SystemSettings.launchAtSignIn = value
+                        }
                     }
                 }
             }
@@ -738,32 +888,40 @@ ModalSheet {
                 width: parent.width
                 visible: root.section === "diagnostics"
                 height: visible ? implicitHeight : 0
-                spacing: Theme.spaced(4)
+                spacing: Theme.spaced(16)
 
-                SettingRow {
-                    width: parent.width
-                    visible: DiagnosticsSettings.available
-                    title: qsTr("Share crash reports and diagnostics")
-                    caption: qsTr("Send crash reports, errors and recent activity to developers. This helps us identify and fix errors when they occur.")
-                    controlWidth: Theme.sized(52)
+                SettingCard {
+                    sectionTitle: qsTr("Diagnostics & Logging")
 
-                    ToggleSwitch {
-                        checked: DiagnosticsSettings.enabled
-                        Accessible.name: qsTr("Share crash reports and diagnostics")
-                        onToggled: value => DiagnosticsSettings.enabled = value
+                    SettingRow {
+                        width: parent.width
+                        visible: DiagnosticsSettings.available
+                        title: qsTr("Share crash reports and diagnostics")
+                        caption: qsTr("Send crash reports, errors and recent activity to developers. This helps us identify and fix errors when they occur.")
+                        controlWidth: Theme.sized(52)
+
+                        ToggleSwitch {
+                            checked: DiagnosticsSettings.enabled
+                            Accessible.name: qsTr("Share crash reports and diagnostics")
+                            onToggled: value => DiagnosticsSettings.enabled = value
+                        }
                     }
-                }
 
-                SettingRow {
-                    width: parent.width
-                    title: qsTr("Logs")
-                    caption: AppInfo.logFile
-                    controlWidth: Theme.sized(112)
+                    SettingDivider {
+                        visible: DiagnosticsSettings.available
+                    }
 
-                    PillButton {
-                        icon: "folder_open"
-                        text: qsTr("Open")
-                        onClicked: Qt.openUrlExternally(AppInfo.logFolder)
+                    SettingRow {
+                        width: parent.width
+                        title: qsTr("Logs")
+                        caption: AppInfo.logFile
+                        controlWidth: Theme.sized(112)
+
+                        PillButton {
+                            icon: "folder_open"
+                            text: qsTr("Open")
+                            onClicked: Qt.openUrlExternally(AppInfo.logFolder)
+                        }
                     }
                 }
             }
@@ -774,77 +932,91 @@ ModalSheet {
                 width: parent.width
                 visible: root.section === "about"
                 height: visible ? implicitHeight : 0
-                spacing: Theme.spaced(4)
+                spacing: Theme.spaced(16)
 
-                SettingRow {
-                    width: parent.width
-                    title: AppInfo.name
-                    caption: qsTr("A native YouTube Music client in C++ and Qt Quick")
-                }
+                SettingCard {
+                    sectionTitle: qsTr("Application")
 
-                SettingRow {
-                    width: parent.width
-                    title: qsTr("Version %1").arg(AppInfo.version)
-                    caption: Updater.checkState === Updater.Checking ? qsTr("Checking for updates...")
-                        : Updater.available ? qsTr("Version %1 is available").arg(Updater.version)
-                        : Updater.checkState === Updater.Unreachable ? qsTr("Could not check for updates")
-                        : Updater.checkState === Updater.Checked ? qsTr("You have the latest version")
-                        : ""
-                    controlWidth: updateAction.implicitWidth
+                    SettingRow {
+                        width: parent.width
+                        title: AppInfo.name
+                        caption: qsTr("A native YouTube Music client in C++ and Qt Quick")
+                    }
 
-                    PillButton {
-                        id: updateAction
+                    SettingDivider {}
 
-                        text: Updater.available ? qsTr("See what's new") : qsTr("Check now")
-                        icon: Updater.available ? "arrow_forward" : "refresh"
-                        toggled: Updater.available
-                        busy: Updater.checkState === Updater.Checking
-                        interactive: Updater.checkState !== Updater.Checking
-                        onClicked: {
-                            if (Updater.available)
-                                Updater.showDetails();
-                            else
-                                Updater.check();
+                    SettingRow {
+                        width: parent.width
+                        title: qsTr("Version %1").arg(AppInfo.version)
+                        caption: Updater.checkState === Updater.Checking ? qsTr("Checking for updates...")
+                            : Updater.available ? qsTr("Version %1 is available").arg(Updater.version)
+                            : Updater.checkState === Updater.Unreachable ? qsTr("Could not check for updates")
+                            : Updater.checkState === Updater.Checked ? qsTr("You have the latest version")
+                            : ""
+                        controlWidth: updateAction.implicitWidth
+
+                        PillButton {
+                            id: updateAction
+
+                            text: Updater.available ? qsTr("See what's new") : qsTr("Check now")
+                            icon: Updater.available ? "arrow_forward" : "refresh"
+                            toggled: Updater.available
+                            busy: Updater.checkState === Updater.Checking
+                            interactive: Updater.checkState !== Updater.Checking
+                            onClicked: {
+                                if (Updater.available)
+                                    Updater.showDetails();
+                                else
+                                    Updater.check();
+                            }
+                        }
+                    }
+
+                    SettingDivider {}
+
+                    SettingRow {
+                        width: parent.width
+                        title: qsTr("Check for updates automatically")
+                        caption: qsTr("Look for a new version shortly after %1 starts and every few hours").arg(AppInfo.name)
+                        controlWidth: Theme.sized(52)
+
+                        ToggleSwitch {
+                            checked: Updater.automatic
+                            Accessible.name: qsTr("Check for updates automatically")
+                            onToggled: value => Updater.automatic = value
                         }
                     }
                 }
 
-                SettingRow {
-                    width: parent.width
-                    title: qsTr("Check for updates automatically")
-                    caption: qsTr("Look for a new version shortly after %1 starts and every few hours").arg(AppInfo.name)
-                    controlWidth: Theme.sized(52)
+                SettingCard {
+                    sectionTitle: qsTr("Links")
 
-                    ToggleSwitch {
-                        checked: Updater.automatic
-                        Accessible.name: qsTr("Check for updates automatically")
-                        onToggled: value => Updater.automatic = value
+                    SettingRow {
+                        width: parent.width
+                        title: qsTr("Website")
+                        caption: AppInfo.website
+                        controlWidth: Theme.sized(112)
+
+                        PillButton {
+                            icon: "open_in_new"
+                            text: qsTr("Open")
+                            onClicked: Qt.openUrlExternally(AppInfo.website)
+                        }
                     }
-                }
 
-                SettingRow {
-                    width: parent.width
-                    title: qsTr("Website")
-                    caption: AppInfo.website
-                    controlWidth: Theme.sized(112)
+                    SettingDivider {}
 
-                    PillButton {
-                        icon: "open_in_new"
-                        text: qsTr("Open")
-                        onClicked: Qt.openUrlExternally(AppInfo.website)
-                    }
-                }
+                    SettingRow {
+                        width: parent.width
+                        title: qsTr("Source code")
+                        caption: AppInfo.repository
+                        controlWidth: Theme.sized(112)
 
-                SettingRow {
-                    width: parent.width
-                    title: qsTr("Source code")
-                    caption: AppInfo.repository
-                    controlWidth: Theme.sized(112)
-
-                    PillButton {
-                        icon: "open_in_new"
-                        text: qsTr("Open")
-                        onClicked: Qt.openUrlExternally(AppInfo.repository)
+                        PillButton {
+                            icon: "open_in_new"
+                            text: qsTr("Open")
+                            onClicked: Qt.openUrlExternally(AppInfo.repository)
+                        }
                     }
                 }
             }

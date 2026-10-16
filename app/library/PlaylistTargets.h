@@ -40,6 +40,7 @@ public:
     Q_INVOKABLE void show(const QStringList &videoIds);
     Q_INVOKABLE void dismiss();
     Q_INVOKABLE void reload();
+    Q_INVOKABLE void loadAccountPlaylists();
     Q_INVOKABLE void retry();
     Q_INVOKABLE void choose(int index);
     Q_INVOKABLE void createWith(const QString &title);

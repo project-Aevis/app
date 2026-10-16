@@ -95,10 +95,10 @@ Item {
 
                 Rectangle {
                     anchors.fill: parent
-                    radius: Theme.shape.sheet
-                    color: Theme.colLayer1
+                    radius: Theme.sized(16)
+                    color: Theme.darkMode ? Qt.rgba(0.13, 0.13, 0.16, 0.96) : Qt.rgba(0.98, 0.98, 0.99, 0.96)
                     border.width: 1
-                    border.color: Theme.colOutlineVariant
+                    border.color: Theme.darkMode ? Qt.rgba(1, 1, 1, 0.12) : Qt.rgba(0, 0, 0, 0.08)
                 }
 
                 MouseArea {

@@ -13,11 +13,11 @@ IconButton {
     readonly property bool canRate: Account.signedIn && Connectivity.online && root.videoId.length > 0
         && LibraryActions.pendingRatings.indexOf(root.videoId) < 0
 
-    icon: root.down ? "thumb_down" : "thumb_up"
+    icon: root.down ? "thumb_down" : (root.selected ? "star_fill" : "star")
     Accessible.name: root.down ? (root.selected ? qsTr("Remove dislike") : qsTr("Dislike"))
-        : (root.selected ? qsTr("Remove like") : qsTr("Like"))
+        : (root.selected ? qsTr("Remove favorite") : qsTr("Favorite"))
     iconFill: root.selected ? 1 : 0
-    colIcon: root.selected ? Theme.colPrimary : Theme.colOnSurfaceVariant
+    colIcon: root.selected ? "#FA2D48" : Theme.colOnSurfaceVariant
     interactive: root.canRate
     opacity: interactive ? 1 : 0.4
 

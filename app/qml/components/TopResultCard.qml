@@ -37,10 +37,18 @@ Item {
 
         width: root.wide && root.listed ? Math.round(root.width * 0.48) : root.width
         height: root.plateHeight
-        rounding: Theme.rounding.large
-        colBackground: Theme.colLayer2
+        rounding: Theme.sized(16)
+        colBackground: Theme.darkMode ? Qt.rgba(1, 1, 1, 0.05) : Qt.rgba(0, 0, 0, 0.04)
         Accessible.role: Accessible.Button
         Accessible.name: root.lead.title
+
+        Rectangle {
+            anchors.fill: parent
+            radius: plate.rounding
+            color: "transparent"
+            border.width: 1
+            border.color: Theme.darkMode ? Qt.rgba(1, 1, 1, 0.08) : Qt.rgba(0, 0, 0, 0.06)
+        }
 
         Item {
             anchors.fill: parent
@@ -77,7 +85,7 @@ Item {
             Artwork {
                 anchors.fill: parent
                 artId: root.lead.artId
-                rounding: root.person ? Theme.shape.avatar : Theme.shape.cover
+                rounding: root.person ? Theme.shape.avatar : Theme.sized(12)
             }
 
             LiveBadge {
@@ -125,7 +133,7 @@ Item {
                 font.pixelSize: Theme.font.smallest
                 font.capitalization: Font.AllUppercase
                 font.letterSpacing: 0.8
-                color: Theme.colPrimary
+                color: "#FA2D48"
                 elide: Text.ElideRight
             }
 
@@ -134,7 +142,7 @@ Item {
                 text: root.lead.title
                 title: true
                 font.pixelSize: Theme.font.huge
-                color: root.active ? Theme.colPrimary : Theme.colOnSurface
+                color: root.active ? "#FA2D48" : Theme.colOnSurface
                 wrapMode: Text.WordWrap
                 maximumLineCount: 2
                 elide: Text.ElideRight
@@ -161,6 +169,8 @@ Item {
                     visible: root.lead.playable || root.collection || root.shuffles
                     text: root.lead.playable || root.collection ? qsTr("Play") : qsTr("Shuffle")
                     icon: root.lead.playable || root.collection ? "play_arrow" : "shuffle"
+                    colBackground: "#FA2D48"
+                    colState: "#FFFFFF"
                     toggled: true
                     interactive: Connectivity.online || root.lead.playable
                     onClicked: {
@@ -175,6 +185,8 @@ Item {
                     visible: root.collection && Connectivity.online
                     text: qsTr("Shuffle")
                     icon: "shuffle"
+                    colBackground: Theme.darkMode ? Qt.rgba(250, 45, 72, 0.16) : Qt.rgba(0, 0, 0, 0.05)
+                    colState: "#FA2D48"
                     onClicked: Browser.playShuffled(root.lead)
                 }
 
@@ -196,7 +208,7 @@ Item {
                     id: overflow
 
                     anchors.verticalCenter: parent.verticalCenter
-                    icon: "more_vert"
+                    icon: "more_horiz"
                     Accessible.name: qsTr("More actions")
                     onClicked: {
                         const spot = plate.mapFromItem(overflow, overflow.width / 2, overflow.height);

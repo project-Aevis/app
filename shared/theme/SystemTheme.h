@@ -2,6 +2,7 @@
 
 #include "ColorSource.h"
 
+#include <QFileSystemWatcher>
 #include <QList>
 #include <QObject>
 #include <QQmlEngine>
@@ -42,6 +43,7 @@ private:
     Qt::ColorScheme colorScheme() const;
 
     QList<ColorSource *> m_sources;
+    QFileSystemWatcher m_watcher;
     Qt::ColorScheme m_platformScheme = Qt::ColorScheme::Unknown;
     QString m_preferredId;
 };

@@ -7,57 +7,157 @@ Item {
     property string icon: ""
     property string label: ""
     property bool selected: false
-    property real expansion: 0
-
-    readonly property real collapsedX: (Theme.size.railCollapsed - Theme.sized(56)) / 2
-    readonly property real indicatorX: root.collapsedX + (Theme.spaced(12) - root.collapsedX) * expansion
-    readonly property real indicatorWidth: Theme.sized(56)
-        + (Theme.size.railExpanded - Theme.spaced(24) - Theme.sized(56)) * expansion
-    readonly property real glyphCenterX: Theme.size.railCollapsed / 2
-        + (Theme.spaced(12) + Theme.sized(28) - Theme.size.railCollapsed / 2) * expansion
-    readonly property real labelOpacity: Math.max(0, (expansion - 0.4) / 0.6)
+    property real expansion: 1
+    property color accentColor: "#FA243C"
+    property real indent: 0
+    property string thumbnail: ""
+    property string trailingIcon: ""
+    property bool showChevron: false
+    property bool chevronExpanded: true
+    readonly property alias hovered: pill.hovered
 
     signal clicked
+    signal chevronClicked
+    signal trailingClicked
 
-    implicitHeight: Theme.sized(52)
+    implicitHeight: Theme.sized(31)
+    implicitWidth: parent ? parent.width : Theme.sized(215)
 
-    RippleSurface {
+    Rectangle {
         id: pill
 
-        tooltip: root.expansion < 0.5 ? root.label : ""
+        anchors.fill: parent
+        anchors.leftMargin: Theme.spaced(8) + root.indent
+        anchors.rightMargin: Theme.spaced(8)
+        radius: Theme.sized(7.5)
 
-        x: root.indicatorX
-        anchors.verticalCenter: parent.verticalCenter
-        width: root.indicatorWidth
-        height: Theme.sized(36)
-        rounding: Theme.shape.navigation
-        colBackground: root.selected ? Theme.colSecondaryContainer : "transparent"
-        colState: root.selected ? Theme.colOnSecondaryContainer : Theme.colOnSurface
+        readonly property bool hovered: mouseArea.containsMouse
+        readonly property bool pressed: mouseArea.pressed
 
-        onClicked: root.clicked()
+        color: root.selected
+            ? (Theme.darkMode ? ColorUtils.withAlpha("#FFFFFF", 0.14) : ColorUtils.withAlpha("#000000", 0.06))
+            : (pressed
+                ? (Theme.darkMode ? ColorUtils.withAlpha("#FFFFFF", 0.10) : ColorUtils.withAlpha("#000000", 0.06))
+                : (hovered
+                    ? (Theme.darkMode ? ColorUtils.withAlpha("#FFFFFF", 0.06) : ColorUtils.withAlpha("#000000", 0.035))
+                    : "transparent"))
 
-        Sym {
-            id: glyph
-
-            x: root.glyphCenterX - root.indicatorX - width / 2
-            anchors.verticalCenter: parent.verticalCenter
-            text: root.icon
-            iconSize: Theme.sized(24)
-            fill: root.selected ? 1 : 0
-            color: root.selected ? Theme.colOnSecondaryContainer : Theme.colOnSurfaceVariant
+        Behavior on color {
+            ColorAnimation {
+                duration: Theme.duration.fast
+                easing.type: Easing.BezierSpline
+                easing.bezierCurve: Theme.curve.expressiveEffects
+            }
         }
 
-        StyledText {
-            x: Theme.spaced(12) + Theme.sized(56) - root.indicatorX
-            anchors.verticalCenter: parent.verticalCenter
-            width: Math.max(0, pill.width - x - Theme.spaced(14))
-            visible: root.labelOpacity > 0
-            opacity: root.labelOpacity
-            text: root.label
-            title: root.selected
-            font.pixelSize: Theme.font.smallie
-            color: root.selected ? Theme.colOnSecondaryContainer : Theme.colOnSurfaceVariant
-            elide: Text.ElideRight
+        MouseArea {
+            id: mouseArea
+            anchors.fill: parent
+            hoverEnabled: true
+            onClicked: root.clicked()
+        }
+
+        Row {
+            anchors.fill: parent
+            anchors.leftMargin: Theme.spaced(8)
+            anchors.rightMargin: Theme.spaced(8)
+            spacing: Theme.spaced(8)
+
+            Item {
+                id: chevronBox
+                anchors.verticalCenter: parent.verticalCenter
+                width: root.showChevron ? Theme.sized(10) : 0
+                height: Theme.sized(10)
+                visible: root.showChevron
+
+                AppleIcon {
+                    anchors.centerIn: parent
+                    name: "chevron_down"
+                    size: Theme.sized(9)
+                    color: Theme.colInactive
+                    rotation: root.chevronExpanded ? 0 : -90
+                    Behavior on rotation {
+                        NumberAnimation { duration: 150 }
+                    }
+                }
+
+                MouseArea {
+                    anchors.fill: parent
+                    anchors.margins: -4
+                    onClicked: root.chevronClicked()
+                }
+            }
+
+            Item {
+                id: iconBox
+                anchors.verticalCenter: parent.verticalCenter
+                width: Theme.sized(18)
+                height: Theme.sized(18)
+                visible: root.thumbnail.length > 0 || root.icon.length > 0
+
+                Rectangle {
+                    anchors.fill: parent
+                    radius: Theme.sized(4.5)
+                    clip: true
+                    visible: root.thumbnail.length > 0
+                    color: Theme.colLayer2
+
+                    Image {
+                        anchors.fill: parent
+                        source: root.thumbnail
+                        fillMode: Image.PreserveAspectCrop
+                        asynchronous: true
+                        sourceSize: Qt.size(36, 36)
+                    }
+                }
+
+                AppleIcon {
+                    anchors.centerIn: parent
+                    name: root.icon
+                    size: Theme.sized(17)
+                    color: root.accentColor
+                    visible: root.thumbnail.length === 0 && root.icon.length > 0
+                }
+            }
+
+            StyledText {
+                id: textLabel
+                anchors.verticalCenter: parent.verticalCenter
+                width: parent.width - (chevronBox.visible ? chevronBox.width + parent.spacing : 0)
+                    - (iconBox.visible ? iconBox.width + parent.spacing : 0)
+                    - (trailingBox.visible ? trailingBox.width + parent.spacing : 0)
+                text: root.label
+                font.family: Theme.font.main
+                font.pixelSize: Theme.font.smaller
+                font.weight: root.selected ? Font.Medium : Font.Normal
+                color: root.selected
+                    ? (Theme.darkMode ? "#FFFFFF" : "#1D1D1F")
+                    : (Theme.darkMode ? "#E5E5EA" : "#1D1D1F")
+                elide: Text.ElideRight
+            }
+
+            Item {
+                id: trailingBox
+                anchors.verticalCenter: parent.verticalCenter
+                width: root.trailingIcon.length > 0 ? Theme.sized(16) : 0
+                height: Theme.sized(16)
+                visible: root.trailingIcon.length > 0
+
+                AppleIcon {
+                    anchors.centerIn: parent
+                    name: root.trailingIcon
+                    size: Theme.sized(14)
+                    color: Theme.colInactive
+                }
+
+                MouseArea {
+                    anchors.fill: parent
+                    anchors.margins: -4
+                    cursorShape: Qt.PointingHandCursor
+                    visible: root.trailingIcon.length > 0
+                    onClicked: root.trailingClicked()
+                }
+            }
         }
     }
 }

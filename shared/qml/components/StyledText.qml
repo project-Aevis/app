@@ -12,7 +12,7 @@ Text {
     color: Theme.colOnSurface
 
     font {
-        family: root.mono ? Theme.font.mono : Theme.font.main
+        family: root.mono ? Theme.font.mono : (root.title ? Theme.font.displayFont : Theme.font.main)
         pixelSize: Theme.font.small
         weight: root.title ? Theme.font.titleWeight : Theme.font.weight
         hintingPreference: Font.PreferDefaultHinting

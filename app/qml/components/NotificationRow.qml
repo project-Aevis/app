@@ -67,18 +67,17 @@ Item {
                 y: Theme.spaced(13)
                 width: Theme.sized(40)
                 height: Theme.sized(40)
-                radius: Theme.rounding.small
-                color: root.entry.activity || root.entry.unread ? Theme.colSecondaryContainer
+                radius: Theme.sized(10)
+                color: root.entry.activity || root.entry.unread ? (Theme.darkMode ? Qt.rgba(0.98, 0.18, 0.28, 0.18) : Qt.rgba(0.98, 0.18, 0.28, 0.12))
                     : Theme.colLayer3
 
-                Sym {
+                AppleIcon {
                     anchors.centerIn: parent
-                    text: root.entry.activity ? "download"
-                        : root.entry.icon.length > 0 ? root.entry.icon : "campaign"
-                    iconSize: Theme.sized(21)
-                    fill: root.entry.unread ? 1 : 0
+                    name: root.entry.activity ? "download"
+                        : root.entry.icon.length > 0 ? root.entry.icon : "listen_now"
+                    size: Theme.sized(20)
                     color: root.entry.activity || root.entry.unread
-                        ? Theme.colOnSecondaryContainer : Theme.colOnSurfaceVariant
+                        ? "#FA2D48" : Theme.colOnSurfaceVariant
                 }
             }
 
